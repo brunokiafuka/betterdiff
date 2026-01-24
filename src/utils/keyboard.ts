@@ -33,7 +33,7 @@ class KeyboardManager {
   }
 
   private handleKeyDown(event: KeyboardEvent) {
-    for (const [id, shortcut] of this.shortcuts) {
+    for (const [_id, shortcut] of this.shortcuts) {
       if (this.matchesShortcut(event, shortcut)) {
         event.preventDefault()
         shortcut.handler()

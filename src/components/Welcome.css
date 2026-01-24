@@ -1,0 +1,258 @@
+.welcome {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1e1e1e;
+  padding: 60px 40px;
+}
+
+.welcome-content {
+  max-width: 600px;
+  width: 100%;
+}
+
+.welcome-header {
+  text-align: center;
+  margin-bottom: 80px;
+}
+
+.welcome-title {
+  font-size: 48px;
+  font-weight: 600;
+  color: #cccccc;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.5px;
+}
+
+.welcome-subtitle {
+  font-size: 14px;
+  color: #999;
+  margin: 0;
+  font-weight: 400;
+}
+
+.welcome-setup {
+  text-align: center;
+}
+
+.setup-description {
+  font-size: 14px;
+  color: #999;
+  margin: 0 0 32px 0;
+}
+
+.setup-hint {
+  font-size: 12px;
+  color: #666;
+  margin: 24px 0 0 0;
+  line-height: 1.6;
+}
+
+.setup-hint strong {
+  color: #cccccc;
+  font-weight: 500;
+}
+
+.welcome-ready {
+  text-align: center;
+}
+
+.welcome-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 60px;
+  flex-wrap: wrap;
+}
+
+.welcome-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: #2d2d30;
+  border: 1px solid #3c3c3c;
+  border-radius: 6px;
+  color: #cccccc;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.welcome-action-btn:hover:not(:disabled) {
+  background: #3c3c3c;
+  border-color: #555;
+}
+
+.welcome-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-btn-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.welcome-action-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+}
+
+.recent-repos {
+  margin-top: 0;
+}
+
+.recent-repos-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 0 4px;
+}
+
+.recent-repos-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.recent-repos-view-all {
+  font-size: 13px;
+  color: #999;
+  cursor: pointer;
+  transition: color 0.15s;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-weight: 400;
+}
+
+.recent-repos-view-all:hover {
+  color: #cccccc;
+}
+
+.recent-repos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recent-repo-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-radius: 4px;
+}
+
+.recent-repo-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.repo-item-name {
+  font-size: 14px;
+  color: #cccccc;
+  font-weight: 400;
+}
+
+.repo-item-path {
+  font-size: 13px;
+  color: #666;
+  font-family: 'SF Mono', Monaco, monospace;
+}
+
+.repo-loading {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.repo-loading p {
+  color: #999;
+  font-size: 14px;
+  margin-top: 16px;
+}
+
+.repo-error {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.repo-empty {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.repo-empty p {
+  color: #999;
+  font-size: 14px;
+}
+
+.btn-retry {
+  padding: 10px 20px;
+  background: #2d2d30;
+  border: 1px solid #3c3c3c;
+  border-radius: 6px;
+  color: #cccccc;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 16px;
+}
+
+.btn-retry:hover {
+  background: #3c3c3c;
+  border-color: #555;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #3c3c3c;
+  border-top-color: #007acc;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .welcome {
+    padding: 40px 20px;
+  }
+
+  .welcome-title {
+    font-size: 36px;
+  }
+
+  .welcome-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .welcome-action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

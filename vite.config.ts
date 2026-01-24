@@ -9,14 +9,17 @@ export default defineConfig({
     electron([
       {
         entry: 'electron/main.ts',
-        onstart(options) {
-          options.startup()
-        },
         vite: {
           build: {
+            sourcemap: false,
             outDir: 'dist-electron',
+            lib: {
+              entry: 'electron/main.ts',
+              formats: ['cjs'],
+              fileName: () => 'main.cjs'
+            },
             rollupOptions: {
-              external: ['better-sqlite3']
+              external: ['electron', 'better-sqlite3', '@octokit/rest', '@octokit/graphql', 'path', 'url']
             }
           }
         }
@@ -28,7 +31,16 @@ export default defineConfig({
         },
         vite: {
           build: {
-            outDir: 'dist-electron'
+            sourcemap: false,
+            outDir: 'dist-electron',
+            lib: {
+              entry: 'electron/preload.ts',
+              formats: ['cjs'],
+              fileName: () => 'preload.cjs'
+            },
+            rollupOptions: {
+              external: ['electron']
+            }
           }
         }
       }

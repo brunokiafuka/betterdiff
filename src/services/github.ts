@@ -1,10 +1,9 @@
 // GitHub API service (renderer side)
-import { Repo, GitRef, Comparison, FileChange, Commit } from '../types'
+import { Repo, GitRef, Comparison } from '../types'
 
 export class GitHubService {
-  async authenticate(token: string): Promise<boolean> {
-    const result = await window.electronAPI.github.auth(token)
-    return result.success
+  async authenticate(token: string): Promise<{ success: boolean; user?: string; error?: string }> {
+    return await window.electronAPI.github.auth(token)
   }
 
   async fetchRepositories(): Promise<Repo[]> {
@@ -31,6 +30,14 @@ export class GitHubService {
       files: result.files,
       commits: result.commits
     }
+  }
+
+  async getFileContent(repo: Repo, ref: GitRef, path: string): Promise<string> {
+    return await window.electronAPI.github.getFileContent(
+      repo.fullName,
+      ref.sha,
+      path
+    )
   }
 
   async getBlame(repo: Repo, ref: GitRef, path: string) {

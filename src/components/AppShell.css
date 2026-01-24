@@ -10,14 +10,21 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 16px;
+  padding: 10px 16px;
   background: #252526;
   border-bottom: 1px solid #3c3c3c;
-  height: 48px;
+  min-height: 52px;
   -webkit-app-region: drag;
 }
 
-.top-bar-left,
+.top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  -webkit-app-region: no-drag;
+  padding-left: 78px; /* Space for macOS window controls */
+}
+
 .top-bar-right {
   display: flex;
   align-items: center;
@@ -31,26 +38,49 @@
 }
 
 .repo-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   padding: 6px 12px;
   background: #2d2d30;
   border-radius: 4px;
   cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
 .repo-name:hover {
   background: #3e3e42;
 }
 
-.btn-select-repo {
+.repo-name-btn {
+  font-size: 13px;
+  font-weight: 600;
   padding: 6px 12px;
+  background: #2d2d30;
+  border: none;
+  border-radius: 4px;
+  color: #cccccc;
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.2;
+  transition: background 0.2s;
+}
+
+.repo-name-btn:hover {
+  background: #3e3e42;
+}
+
+.btn-select-repo {
+  padding: 6px 14px;
   background: #0e639c;
   border: none;
   border-radius: 4px;
   color: white;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
 .btn-select-repo:hover {
@@ -60,28 +90,39 @@
 .ref-selectors {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  flex-wrap: nowrap;
 }
 
 .ref-selector {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .ref-selector label {
   font-size: 12px;
   color: #999;
+  white-space: nowrap;
+  font-weight: 500;
 }
 
 .ref-selector select {
-  padding: 4px 8px;
+  padding: 5px 24px 5px 8px;
   background: #3c3c3c;
   border: 1px solid #555;
   border-radius: 3px;
   color: #cccccc;
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
+  min-width: 140px;
+  max-width: 180px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  line-height: 1.2;
 }
 
 .ref-selector select:focus {
@@ -91,7 +132,9 @@
 
 .ref-arrow {
   color: #666;
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 2px;
 }
 
 .btn-action {
@@ -101,8 +144,11 @@
   border-radius: 4px;
   color: #cccccc;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 500;
   transition: all 0.2s;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
 .btn-action:hover {

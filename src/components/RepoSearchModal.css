@@ -1,0 +1,309 @@
+.repo-search-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.repo-search-modal {
+  width: 90%;
+  max-width: 700px;
+  max-height: 80vh;
+  background: #252526;
+  border-radius: 8px;
+  border: 1px solid #3c3c3c;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #3c3c3c;
+  background: #2d2d30;
+}
+
+.modal-instructions {
+  font-size: 11px;
+  color: #999;
+  font-weight: 500;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  background: #3c3c3c;
+  color: #cccccc;
+}
+
+.modal-close svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2;
+}
+
+.modal-search {
+  position: relative;
+  padding: 16px;
+  border-bottom: 1px solid #3c3c3c;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 40px 12px 16px;
+  background: #1e1e1e;
+  border: 1px solid #555;
+  border-radius: 6px;
+  color: #cccccc;
+  font-size: 14px;
+  font-family: 'SF Mono', Monaco, monospace;
+  transition: all 0.2s;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #007acc;
+  box-shadow: 0 0 0 3px rgba(0, 122, 204, 0.2);
+}
+
+.search-input::placeholder {
+  color: #666;
+}
+
+.search-clear {
+  position: absolute;
+  right: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-clear:hover {
+  background: #3c3c3c;
+  color: #cccccc;
+}
+
+.search-clear svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+}
+
+.modal-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+  min-height: 200px;
+  max-height: calc(80vh - 200px);
+}
+
+.repo-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-left: 3px solid transparent;
+  position: relative;
+}
+
+.repo-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.repo-item.selected {
+  background: rgba(0, 122, 204, 0.15);
+  border-left-color: #007acc;
+}
+
+.repo-item.recent {
+  border-left-color: #10b981;
+}
+
+.repo-item-icon {
+  flex-shrink: 0;
+  color: #999;
+  display: flex;
+  align-items: center;
+}
+
+.repo-item-icon svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+}
+
+.repo-item-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.repo-item-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #cccccc;
+  margin-bottom: 4px;
+  font-family: 'SF Mono', Monaco, monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.repo-item-path {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.repo-item-remove {
+  background: transparent;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  opacity: 0;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.repo-item:hover .repo-item-remove {
+  opacity: 1;
+}
+
+.repo-item-remove:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.repo-item-remove svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+}
+
+.modal-empty {
+  padding: 60px 20px;
+  text-align: center;
+  color: #999;
+}
+
+.modal-empty p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.empty-hint {
+  font-size: 12px;
+  color: #666;
+}
+
+.modal-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #3c3c3c;
+  background: #2d2d30;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.modal-action-btn {
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid #555;
+  border-radius: 4px;
+  color: #cccccc;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-action-btn:hover {
+  background: #3c3c3c;
+  border-color: #666;
+}
+
+/* Scrollbar styling */
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #3c3c3c;
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

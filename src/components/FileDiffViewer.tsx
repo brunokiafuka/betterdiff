@@ -1,33 +1,37 @@
 import { useState, useEffect } from 'react'
 import { DiffEditor, Editor } from '@monaco-editor/react'
-import { useAppStore } from '../stores/appStore'
-import './DiffView.css'
+import './FileDiffViewer.css'
 
-export const DiffView: React.FC = () => {
-  const { selectedFile, showBlame, viewMode, currentComparison } = useAppStore()
+interface FileDiffViewerProps {
+  filePath: string
+  baseSha: string | null
+  headSha: string | null
+  repoFullName: string
+}
+
+export const FileDiffViewer: React.FC<FileDiffViewerProps> = ({
+  filePath,
+  baseSha,
+  headSha,
+  repoFullName
+}) => {
   const [oldContent, setOldContent] = useState('')
   const [newContent, setNewContent] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Get the file path from selectedFile or from comparison's first file
-  const filePath = selectedFile?.path || currentComparison?.files?.[0]?.path
-
   useEffect(() => {
-    if (!currentComparison || !filePath) {
+    if (!baseSha || !headSha || !repoFullName || !filePath) {
       return
     }
 
     const loadFileContents = async () => {
       setLoading(true)
       try {
-        const { repo, baseRef, headRef } = currentComparison
-
-        // Check if this is a "same commit" comparison (no actual diff)
-        if (baseRef.sha === headRef.sha) {
+        if (baseSha === headSha) {
           // Same commit - load content only once
           const content = await window.electronAPI.github.getFileContent(
-            repo.fullName,
-            baseRef.sha,
+            repoFullName,
+            baseSha,
             filePath
           )
           setOldContent(content)
@@ -35,8 +39,8 @@ export const DiffView: React.FC = () => {
         } else {
           // Different commits - fetch both versions
           const [oldData, newData] = await Promise.all([
-            window.electronAPI.github.getFileContent(repo.fullName, baseRef.sha, filePath),
-            window.electronAPI.github.getFileContent(repo.fullName, headRef.sha, filePath)
+            window.electronAPI.github.getFileContent(repoFullName, baseSha, filePath),
+            window.electronAPI.github.getFileContent(repoFullName, headSha, filePath)
           ])
           setOldContent(oldData)
           setNewContent(newData)
@@ -51,20 +55,7 @@ export const DiffView: React.FC = () => {
     }
 
     loadFileContents()
-  }, [currentComparison, filePath])
-
-  if (!currentComparison || !filePath) {
-    return (
-      <div className="diff-view">
-        <div className="diff-empty">
-          Select commits from the history to view diff
-        </div>
-      </div>
-    )
-  }
-
-  // Check if showing same content (no diff)
-  const isSameContent = currentComparison?.baseRef.sha === currentComparison?.headRef.sha
+  }, [baseSha, headSha, repoFullName, filePath])
 
   // Detect language from file extension
   const getLanguage = (path: string) => {
@@ -96,39 +87,41 @@ export const DiffView: React.FC = () => {
     return langMap[ext || ''] || 'plaintext'
   }
 
-  // Get stats from comparison files if available
-  const fileStats = currentComparison.files?.find(f => f.path === filePath)
+  if (!baseSha || !headSha) {
+    return (
+      <div className="file-diff-viewer">
+        <div className="diff-empty">
+          Select commits from the history below to view the file
+        </div>
+      </div>
+    )
+  }
+
+  const isSameCommit = baseSha === headSha
+  const baseShortSha = baseSha.substring(0, 7)
+  const headShortSha = headSha.substring(0, 7)
 
   return (
-    <div className="diff-view">
+    <div className="file-diff-viewer">
       <div className="diff-header">
         <div className="diff-file-path">
           {filePath}
-          {isSameContent && (
-            <span className="same-commit-badge">Viewing at {currentComparison.baseRef.name}</span>
-          )}
-          {!isSameContent && (
-            <span className="diff-refs">
-              {currentComparison.baseRef.name} → {currentComparison.headRef.name}
-            </span>
+          {isSameCommit ? (
+            <span className="commit-badge single">@ {baseShortSha}</span>
+          ) : (
+            <span className="commit-badge diff">{baseShortSha} → {headShortSha}</span>
           )}
         </div>
-        {!isSameContent && fileStats && (
-          <div className="diff-stats">
-            <span className="stat-additions">+{fileStats.additions}</span>
-            <span className="stat-deletions">−{fileStats.deletions}</span>
-          </div>
-        )}
       </div>
-      
+
       <div className="diff-editor-container">
         {loading ? (
           <div className="diff-loading">
             <div className="spinner"></div>
             <span>Loading file contents...</span>
           </div>
-        ) : isSameContent ? (
-          // Show single Monaco editor for same content (no diff needed)
+        ) : isSameCommit ? (
+          // Show single Monaco editor for viewing file at one commit
           <Editor
             height="100%"
             language={getLanguage(filePath)}
@@ -138,14 +131,14 @@ export const DiffView: React.FC = () => {
               readOnly: true,
               minimap: { enabled: true },
               scrollBeyondLastLine: false,
-              fontSize: 13,
+              fontSize: 10,
               lineNumbers: 'on',
               renderLineHighlight: 'all',
               automaticLayout: true,
             }}
           />
         ) : (
-          // Show diff editor for different commits
+          // Show diff editor for comparing two commits
           <DiffEditor
             height="100%"
             language={getLanguage(filePath)}
@@ -153,14 +146,13 @@ export const DiffView: React.FC = () => {
             modified={newContent}
             theme="vs-dark"
             options={{
-              renderSideBySide: viewMode === 'side-by-side',
+              renderSideBySide: true,
               readOnly: true,
               minimap: { enabled: true },
               scrollBeyondLastLine: false,
-              fontSize: 13,
+              fontSize: 10,
               lineNumbers: 'on',
               renderLineHighlight: 'all',
-              glyphMargin: showBlame,
               automaticLayout: true,
             }}
           />

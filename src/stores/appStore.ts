@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Repo, GitRef, Comparison, FileChange, Commit } from '../types'
+import { Repo, GitRef, Comparison, FileChange } from '../types'
 
 interface AppState {
   // Current repo and refs
