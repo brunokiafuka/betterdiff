@@ -46,7 +46,7 @@ export const Settings: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
     try {
       // Test the token first
       const authResult = await window.electronAPI.github.auth(token.trim())
-      
+
       if (!authResult.success) {
         setError(authResult.error || 'Invalid token')
         setSaving(false)
@@ -58,12 +58,12 @@ export const Settings: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
         ...config,
         githubToken: token.trim()
       }
-      
+
       await window.electronAPI.config.write(newConfig)
-      
+
       setSuccess(true)
       setConfig(newConfig)
-      
+
       // Clear success message after 2 seconds
       setTimeout(() => {
         setSuccess(false)
@@ -174,14 +174,6 @@ export const Settings: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
               Clear
             </button>
           </div>
-        </div>
-
-        <div className="settings-section">
-          <h2>Configuration Location</h2>
-          <p className="section-description">
-            Your configuration is stored locally on your machine.
-          </p>
-          <code className="config-path-display">~/.whodidit/config.json</code>
         </div>
       </div>
     </div>

@@ -100,7 +100,7 @@
   color: rgba(16, 185, 129, 0.9);
   background: rgba(16, 185, 129, 0.1);
   padding: 4px 10px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border: 1px solid rgba(16, 185, 129, 0.3);
   font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
 }
@@ -112,7 +112,7 @@
   color: rgba(255, 255, 255, 0.8);
   background: rgba(255, 255, 255, 0.08);
   padding: 4px 10px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border: 1px solid rgba(255, 255, 255, 0.15);
   font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
 }

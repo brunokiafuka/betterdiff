@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { Settings, Sparkles } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import { RepoSearchModal } from './RepoSearchModal'
 import './AppShell.css'
@@ -95,17 +96,22 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
         <div className="top-bar-right">
           {currentRepo && (
             <>
-              <button className="btn-action" title="Explain (⌘E)">
-                Explain
+              <button 
+                className="btn-action btn-icon" 
+                title="Explain (⌘E)"
+                aria-label="Explain"
+              >
+                <Sparkles size={18} />
               </button>
             </>
           )}
           <button
-            className="btn-action"
+            className="btn-action btn-icon"
             onClick={onSettingsClick}
             title="Settings"
+            aria-label="Settings"
           >
-            Settings
+            <Settings size={18} />
           </button>
         </div>
       </div>

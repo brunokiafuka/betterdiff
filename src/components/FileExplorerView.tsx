@@ -65,7 +65,9 @@ export const FileExplorerView: React.FC = () => {
         ) : (
           <div className="file-explorer-empty">
             <div className="empty-state">
-              <FolderOpen size={48} className="empty-icon" />
+              <div className="empty-icon">
+                <FolderOpen size={48} />
+              </div>
               <h3>Select a file to view</h3>
               <p>Choose any file from the tree to see its content and history</p>
             </div>

@@ -187,9 +187,6 @@ export const CommitDetailsPanel: React.FC<CommitDetailsPanelProps> = ({
           <div className="commit-meta-item">
             <User size={14} />
             <span>{commit.author.name}</span>
-            {commit.author.email && (
-              <span className="meta-email">{commit.author.email}</span>
-            )}
           </div>
           <div className="commit-meta-item">
             <Calendar size={14} />
