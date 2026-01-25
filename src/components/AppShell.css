@@ -49,6 +49,7 @@
 .repo-selector {
   display: flex;
   align-items: center;
+  gap: var(--space-sm);
 }
 
 .repo-name-btn {

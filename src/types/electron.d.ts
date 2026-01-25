@@ -27,6 +27,9 @@ declare global {
       }
       local: {
         selectFolder: () => Promise<any>
+        getStatus: (repoPath: string) => Promise<any>
+        stashChanges: (repoPath: string, message?: string) => Promise<any>
+        checkoutBranch: (repoPath: string, branchName: string, force?: boolean) => Promise<any>
         listBranches: (repoPath: string) => Promise<any[]>
         compareRefs: (repoPath: string, base: string, head: string) => Promise<any>
         getFileContent: (repoPath: string, ref: string, path: string) => Promise<string>

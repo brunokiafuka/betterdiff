@@ -105,11 +105,14 @@ export const Welcome: React.FC = () => {
         console.error('Failed to update recent repos:', err)
       }
 
-      // Fetch branches and set default ref
+      // Fetch branches and set current branch (what's actually checked out)
       const branches = await window.electronAPI.local.listBranches(repo.localPath!)
       if (branches.length > 0) {
-        const defaultBranch = branches.find((b: any) => b.name === repo.defaultBranch) || branches[0]
-        setRefs(defaultBranch, defaultBranch)
+        // Find the current branch (first one is usually current) or use defaultBranch
+        const currentBranch = branches.find((b: any) => b.isCurrent) ||
+          branches.find((b: any) => b.name === repo.defaultBranch) ||
+          branches[0]
+        setRefs(currentBranch, currentBranch)
       }
     } catch (err: any) {
       setError(err.message || 'Failed to select local repository')

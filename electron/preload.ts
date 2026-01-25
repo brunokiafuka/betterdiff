@@ -38,6 +38,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Local repositories
   local: {
     selectFolder: () => ipcRenderer.invoke('local:selectFolder'),
+    getStatus: (repoPath: string) => ipcRenderer.invoke('local:getStatus', repoPath),
+    stashChanges: (repoPath: string, message?: string) => ipcRenderer.invoke('local:stashChanges', repoPath, message),
+    checkoutBranch: (repoPath: string, branchName: string, force?: boolean) => ipcRenderer.invoke('local:checkoutBranch', repoPath, branchName, force),
     listBranches: (repoPath: string) => ipcRenderer.invoke('local:listBranches', repoPath),
     compareRefs: (repoPath: string, base: string, head: string) =>
       ipcRenderer.invoke('local:compareRefs', repoPath, base, head),
@@ -79,6 +82,9 @@ declare global {
       }
       local: {
         selectFolder: () => Promise<any>
+        getStatus: (repoPath: string) => Promise<any>
+        stashChanges: (repoPath: string, message?: string) => Promise<any>
+        checkoutBranch: (repoPath: string, branchName: string, force?: boolean) => Promise<any>
         listBranches: (repoPath: string) => Promise<any[]>
         compareRefs: (repoPath: string, base: string, head: string) => Promise<any>
         getFileContent: (repoPath: string, ref: string, path: string) => Promise<string>

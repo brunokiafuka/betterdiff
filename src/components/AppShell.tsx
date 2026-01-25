@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Settings, Sparkles } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import { RepoSearchModal } from './RepoSearchModal'
+import { BranchSelector } from './BranchSelector'
 import './AppShell.css'
 
 interface AppShellProps {
@@ -75,15 +76,22 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
 
       // Fetch branches and set default ref
       if (repo.type === 'local' && repo.localPath) {
+        // For local repos, get the current branch (what's actually checked out)
         const branches = await window.electronAPI.local.listBranches(repo.localPath)
         if (branches.length > 0) {
-          const defaultBranch = branches.find((b: any) => b.name === repo.defaultBranch) || branches[0]
-          setRefs(defaultBranch, defaultBranch)
+          // Find the current branch or use the default branch from repo info
+          const currentBranch = branches.find((b: any) => b.name === repo.defaultBranch) || branches[0]
+          setRefs(currentBranch, currentBranch)
         }
       } else {
+        // For GitHub repos, default to main/master or the repo's default branch
         const branches = await window.electronAPI.github.listBranches(repo.fullName)
         if (branches.length > 0) {
-          const defaultBranch = branches.find((b: any) => b.name === repo.defaultBranch) || branches[0]
+          // Try to find main, then master, then defaultBranch, then first branch
+          const defaultBranch = branches.find((b: any) => b.name === 'main') ||
+                               branches.find((b: any) => b.name === 'master') ||
+                               branches.find((b: any) => b.name === repo.defaultBranch) ||
+                               branches[0]
           setRefs(defaultBranch, defaultBranch)
         }
       }
@@ -98,13 +106,16 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
         <div className="top-bar-left">
           <div className="repo-selector">
             {currentRepo ? (
-              <button
-                className="repo-name-btn"
-                onClick={() => setShowModal(true)}
-                title="Click to change repository"
-              >
-                {currentRepo.fullName}
-              </button>
+              <>
+                <button
+                  className="repo-name-btn"
+                  onClick={() => setShowModal(true)}
+                  title="Click to change repository"
+                >
+                  {currentRepo.fullName}
+                </button>
+                <BranchSelector />
+              </>
             ) : (
               <button
                 className="btn-select-repo"

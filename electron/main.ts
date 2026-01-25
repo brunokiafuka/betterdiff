@@ -443,25 +443,88 @@ ipcMain.handle('local:selectFolder', async () => {
   }
 })
 
+ipcMain.handle('local:getStatus', async (_event, repoPath: string) => {
+  try {
+    const statusOutput = execGitCommand(repoPath, 'status --porcelain')
+    const hasChanges = statusOutput.trim().length > 0
+    const modifiedFiles = statusOutput.split('\n')
+      .filter(line => line.trim())
+      .map(line => line.trim().substring(3)) // Remove status prefix
+    
+    return {
+      hasChanges,
+      modifiedFiles
+    }
+  } catch (error: any) {
+    console.error('Failed to get git status:', error.message)
+    return { hasChanges: false, modifiedFiles: [] }
+  }
+})
+
+ipcMain.handle('local:stashChanges', async (_event, repoPath: string, message?: string) => {
+  try {
+    const stashMessage = message ? `stash save "${message}"` : 'stash'
+    execGitCommand(repoPath, stashMessage)
+    return { success: true }
+  } catch (error: any) {
+    console.error('Failed to stash changes:', error.message)
+    throw new Error(`Failed to stash changes: ${error.message}`)
+  }
+})
+
+ipcMain.handle('local:checkoutBranch', async (_event, repoPath: string, branchName: string, force: boolean = false) => {
+  try {
+    if (force) {
+      // Force checkout - discard local changes
+      execGitCommand(repoPath, `checkout -f ${branchName}`)
+    } else {
+      execGitCommand(repoPath, `checkout ${branchName}`)
+    }
+    // Get the new branch info
+    const sha = execGitCommand(repoPath, `rev-parse ${branchName}`)
+    return { name: branchName, sha, type: 'branch' as const }
+  } catch (error: any) {
+    console.error('Failed to checkout branch:', error.message)
+    // Check if it's a "local changes would be overwritten" error
+    const errorMessage = error.message || ''
+    if (errorMessage.includes('local changes') || errorMessage.includes('overwritten')) {
+      throw new Error('LOCAL_CHANGES: You have uncommitted changes that would be overwritten. Please commit, stash, or discard them first.')
+    }
+    throw new Error(`Failed to checkout branch: ${errorMessage}`)
+  }
+})
+
 ipcMain.handle('local:listBranches', async (_event, repoPath: string) => {
   try {
     // Get local branches - use simpler command that works in all git versions
     const localBranchesOutput = execGitCommand(repoPath, 'branch')
-    const localBranches = localBranchesOutput.split('\n')
+    const branchList: Array<{ name: string; sha: string; type: 'branch'; isCurrent: boolean } | null> = []
+    
+    localBranchesOutput.split('\n')
       .filter(line => line.trim() && !line.includes('HEAD'))
-      .map(branchLine => {
+      .forEach(branchLine => {
+        // Check if this is the current branch (marked with *)
+        const isCurrent = branchLine.trim().startsWith('*')
         // Remove * marker and whitespace
         const name = branchLine.replace(/^\*\s*/, '').trim()
-        if (!name) return null
+        if (!name) return
+        
         try {
           const sha = execGitCommand(repoPath, `rev-parse ${name}`)
-          return { name, sha, type: 'branch' as const }
+          branchList.push({ name, sha, type: 'branch' as const, isCurrent })
         } catch (e) {
           console.error(`Failed to get SHA for branch ${name}:`, e)
-          return null
         }
       })
-      .filter((b): b is { name: string; sha: string; type: 'branch' } => b !== null)
+    
+    const localBranches = branchList.filter((b): b is { name: string; sha: string; type: 'branch'; isCurrent: boolean } => b !== null)
+    
+    // Sort branches to put current branch first
+    localBranches.sort((a, b) => {
+      if (a.isCurrent && !b.isCurrent) return -1
+      if (!a.isCurrent && b.isCurrent) return 1
+      return a.name.localeCompare(b.name)
+    })
     
     // Get remote branches
     let remoteBranches: { name: string; sha: string; type: 'branch' }[] = []
@@ -507,10 +570,10 @@ ipcMain.handle('local:listBranches', async (_event, repoPath: string) => {
     }
     
     // Combine and deduplicate by name
-    const allRefs = [...localBranches, ...remoteBranches, ...tags]
+    const allRefs: Array<{ name: string; sha: string; type: 'branch' | 'tag' }> = [...localBranches, ...remoteBranches, ...tags]
     const uniqueRefs = new Map<string, { name: string; sha: string; type: 'branch' | 'tag' }>()
     for (const ref of allRefs) {
-      if (!uniqueRefs.has(ref.name)) {
+      if (ref && !uniqueRefs.has(ref.name)) {
         uniqueRefs.set(ref.name, ref)
       }
     }
