@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { FileTreePanel } from './FileTreePanel'
 import { FileHistoryPanel } from './FileHistoryPanel'
 import { FileDiffViewer } from './FileDiffViewer'
+import { CommitDetailsPanel } from './CommitDetailsPanel'
 import { FolderOpen } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import './FileExplorerView.css'
@@ -9,6 +10,7 @@ import './FileExplorerView.css'
 export const FileExplorerView: React.FC = () => {
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null)
   const [selectedCommits, setSelectedCommits] = useState<{ base: string; head: string } | null>(null)
+  const [showDetailsPanel, setShowDetailsPanel] = useState(false)
   const { currentRepo } = useAppStore()
 
   // Listen for file selection events from FileTreePanel
@@ -37,8 +39,8 @@ export const FileExplorerView: React.FC = () => {
         <FileTreePanel />
       </div>
 
-      {/* Right Panel - Split into Diff/Content and History */}
-      <div className="file-explorer-right">
+      {/* Middle Panel - Split into Diff/Content and History */}
+      <div className={`file-explorer-right ${showDetailsPanel ? 'with-details' : ''}`}>
         {selectedFilePath ? (
           <>
             {/* Top: Diff or Content Viewer */}
@@ -48,6 +50,7 @@ export const FileExplorerView: React.FC = () => {
                 baseSha={selectedCommits?.base || null}
                 headSha={selectedCommits?.head || null}
                 repoFullName={currentRepo?.fullName || ''}
+                onDetailsClick={() => setShowDetailsPanel(true)}
               />
             </div>
 
@@ -69,6 +72,18 @@ export const FileExplorerView: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Right Panel - Commit Details */}
+      {showDetailsPanel && selectedCommits && (
+        <div className="file-explorer-details">
+          <CommitDetailsPanel
+            repoFullName={currentRepo?.fullName || ''}
+            baseSha={selectedCommits.base}
+            headSha={selectedCommits.head}
+            onClose={() => setShowDetailsPanel(false)}
+          />
+        </div>
+      )}
     </div>
   )
 }

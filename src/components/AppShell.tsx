@@ -95,13 +95,6 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
         <div className="top-bar-right">
           {currentRepo && (
             <>
-              <button
-                className={`btn-action ${showBlame ? 'active' : ''}`}
-                onClick={toggleBlame}
-                title="Toggle Blame (⌘⇧B)"
-              >
-                Blame
-              </button>
               <button className="btn-action" title="Explain (⌘E)">
                 Explain
               </button>

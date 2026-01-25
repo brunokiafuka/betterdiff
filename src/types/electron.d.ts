@@ -14,6 +14,7 @@ declare global {
         listBranches: (repo: string) => Promise<any[]>
         getRepoTree: (repo: string, ref: string) => Promise<any[]>
         getFileHistory: (repo: string, path: string, ref: string) => Promise<any[]>
+        getCommit: (repo: string, sha: string) => Promise<any>
         getBlame: (repo: string, ref: string, path: string) => Promise<any[]>
       }
       llm: {

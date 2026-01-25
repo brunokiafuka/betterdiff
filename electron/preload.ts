@@ -17,6 +17,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('github:getRepoTree', repo, ref),
     getFileHistory: (repo: string, path: string, ref: string) =>
       ipcRenderer.invoke('github:getFileHistory', repo, path, ref),
+    getCommit: (repo: string, sha: string) =>
+      ipcRenderer.invoke('github:getCommit', repo, sha),
     getBlame: (repo: string, ref: string, path: string) =>
       ipcRenderer.invoke('github:getBlame', repo, ref, path),
   },
@@ -46,6 +48,7 @@ declare global {
         listBranches: (repo: string) => Promise<any[]>
         getRepoTree: (repo: string, ref: string) => Promise<any[]>
         getFileHistory: (repo: string, path: string, ref: string) => Promise<any[]>
+        getCommit: (repo: string, sha: string) => Promise<any>
         getBlame: (repo: string, ref: string, path: string) => Promise<any[]>
       }
       llm: {

@@ -248,6 +248,60 @@ ipcMain.handle('github:getFileHistory', async (_event, repoFullName: string, fil
   }
 })
 
+ipcMain.handle('github:getCommit', async (_event, repoFullName: string, sha: string) => {
+  if (!octokit) {
+    console.error('getCommit: Not authenticated')
+    throw new Error('Not authenticated')
+  }
+  
+  try {
+    const [owner, repo] = repoFullName.split('/')
+    
+    const { data } = await octokit.repos.getCommit({
+      owner,
+      repo,
+      ref: sha
+    })
+    
+    // Extract PR number from commit message
+    const prMatch = data.commit.message.match(/#(\d+)/)
+    const prNumber = prMatch ? parseInt(prMatch[1]) : undefined
+    
+    return {
+      sha: data.sha,
+      shortSha: data.sha.substring(0, 7),
+      message: data.commit.message,
+      prNumber,
+      author: {
+        name: data.commit.author?.name || 'Unknown',
+        email: data.commit.author?.email || '',
+        date: data.commit.author?.date || ''
+      },
+      committer: {
+        name: data.commit.committer?.name || 'Unknown',
+        email: data.commit.committer?.email || '',
+        date: data.commit.committer?.date || ''
+      },
+      stats: {
+        additions: data.stats?.additions || 0,
+        deletions: data.stats?.deletions || 0,
+        total: data.stats?.total || 0
+      },
+      files: data.files?.map((file: any) => ({
+        filename: file.filename,
+        status: file.status,
+        additions: file.additions,
+        deletions: file.deletions,
+        changes: file.changes
+      })) || [],
+      url: data.html_url
+    }
+  } catch (error: any) {
+    console.error('Failed to get commit:', error.message)
+    throw error
+  }
+})
+
 ipcMain.handle('github:getBlame', async (_event, repo: string, ref: string, path: string) => {
   // Will implement with GitHub GraphQL
   return []

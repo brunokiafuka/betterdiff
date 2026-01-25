@@ -2,8 +2,8 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #1e1e1e;
-  color: #cccccc;
+  background: #0a0a0a;
+  color: #ffffff;
 }
 
 .top-bar {
@@ -11,10 +11,11 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 16px;
-  background: #252526;
-  border-bottom: 1px solid #3c3c3c;
+  background: rgba(20, 20, 20, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   min-height: 52px;
   -webkit-app-region: drag;
+  backdrop-filter: blur(20px);
 }
 
 .top-bar-left {
@@ -56,35 +57,38 @@
   font-size: 13px;
   font-weight: 600;
   padding: 6px 12px;
-  background: #2d2d30;
-  border: none;
-  border-radius: 4px;
-  color: #cccccc;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #ffffff;
   cursor: pointer;
   white-space: nowrap;
   line-height: 1.2;
-  transition: background 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .repo-name-btn:hover {
-  background: #3e3e42;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .btn-select-repo {
   padding: 6px 14px;
-  background: #0e639c;
-  border: none;
-  border-radius: 4px;
-  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: #ffffff;
   cursor: pointer;
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
   line-height: 1.2;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-select-repo:hover {
-  background: #1177bb;
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .ref-selectors {
@@ -139,27 +143,27 @@
 
 .btn-action {
   padding: 6px 12px;
-  background: transparent;
-  border: 1px solid #555;
-  border-radius: 4px;
-  color: #cccccc;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #ffffff;
   cursor: pointer;
   font-size: 12px;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
   line-height: 1.2;
 }
 
 .btn-action:hover {
-  background: #2d2d30;
-  border-color: #666;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .btn-action.active {
-  background: #0e639c;
-  border-color: #0e639c;
-  color: white;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
 }
 
 .app-content {

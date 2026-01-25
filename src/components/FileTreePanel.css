@@ -1,35 +1,38 @@
 .file-tree-panel {
   width: 280px;
-  background: #252526;
-  border-right: 1px solid #3c3c3c;
+
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  backdrop-filter: blur(20px);
 }
 
 .file-tree-header {
   padding: 12px 16px;
-  border-bottom: 1px solid #3c3c3c;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .file-tree-header h3 {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  color: #cccccc;
+  color: #888;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
 }
 
 .file-tree-branch {
   font-size: 11px;
-  color: #999;
-  background: #2d2d30;
-  padding: 2px 8px;
-  border-radius: 10px;
+  color: #888;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .file-tree-empty,
@@ -55,28 +58,39 @@
 .tree-node {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
+  gap: 8px;
+  padding: 6px 12px;
   cursor: pointer;
   font-size: 13px;
-  transition: background 0.1s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
+  border-left: 3px solid transparent;
 }
 
 .tree-node:hover {
-  background: #2a2d2e;
+  background: rgba(255, 255, 255, 0.04);
+  border-left-color: rgba(255, 255, 255, 0.1);
 }
 
 .tree-node.selected {
-  background: #37373d;
-  border-left: 3px solid #007acc;
+  background: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 255, 255, 0.3);
 }
 
 .tree-icon {
   flex-shrink: 0;
-  color: #999;
+  color: #888;
   display: flex;
   align-items: center;
+  transition: color 0.2s;
+}
+
+.tree-node:hover .tree-icon {
+  color: #ffffff;
+}
+
+.tree-node.selected .tree-icon {
+  color: #ffffff;
 }
 
 .tree-icon svg {
@@ -86,12 +100,32 @@
 }
 
 .tree-name {
-  color: #cccccc;
+  color: #ffffff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-weight: 400;
+  letter-spacing: -0.1px;
 }
 
 .tree-children {
   /* No additional styling needed, padding is handled by level */
+}
+
+/* Scrollbar styling */
+.file-tree-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.file-tree-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.file-tree-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.file-tree-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
 }

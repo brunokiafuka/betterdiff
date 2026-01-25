@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { DiffEditor, Editor } from '@monaco-editor/react'
+import { Info } from 'lucide-react'
 import './FileDiffViewer.css'
 
 interface FileDiffViewerProps {
@@ -7,13 +8,15 @@ interface FileDiffViewerProps {
   baseSha: string | null
   headSha: string | null
   repoFullName: string
+  onDetailsClick?: () => void
 }
 
 export const FileDiffViewer: React.FC<FileDiffViewerProps> = ({
   filePath,
   baseSha,
   headSha,
-  repoFullName
+  repoFullName,
+  onDetailsClick
 }) => {
   const [oldContent, setOldContent] = useState('')
   const [newContent, setNewContent] = useState('')
@@ -98,20 +101,23 @@ export const FileDiffViewer: React.FC<FileDiffViewerProps> = ({
   }
 
   const isSameCommit = baseSha === headSha
-  const baseShortSha = baseSha.substring(0, 7)
-  const headShortSha = headSha.substring(0, 7)
 
   return (
     <div className="file-diff-viewer">
       <div className="diff-header">
         <div className="diff-file-path">
           {filePath}
-          {isSameCommit ? (
-            <span className="commit-badge single">@ {baseShortSha}</span>
-          ) : (
-            <span className="commit-badge diff">{baseShortSha} → {headShortSha}</span>
-          )}
         </div>
+        {baseSha && headSha && onDetailsClick && (
+          <button
+            className="diff-details-btn"
+            onClick={onDetailsClick}
+            title="View commit details"
+          >
+            <Info size={16} />
+            <span>Details</span>
+          </button>
+        )}
       </div>
 
       <div className="diff-editor-container">

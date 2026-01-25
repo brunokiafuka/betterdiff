@@ -150,11 +150,8 @@ export const FileHistoryPanel: React.FC<FileHistoryPanelProps> = ({ filePath, on
                       onClick={() => handleSelectBase(commit.sha)}
                     >
                       <div className="commit-header">
-                        <span className="commit-sha">{commit.shortSha}</span>
                         <span className="commit-date">{formatDate(commit.author.date)}</span>
-                      </div>
-                      <div className="commit-message">
-                        {commit.message.split("\n")[0]}
+                        <span className="commit-sha">{commit.shortSha}</span>
                       </div>
                       <div className="commit-author">{commit.author.name}</div>
                       {isBase && <div className="commit-badge">BASE</div>}
@@ -182,11 +179,8 @@ export const FileHistoryPanel: React.FC<FileHistoryPanelProps> = ({ filePath, on
                       onClick={() => handleSelectHead(commit.sha)}
                     >
                       <div className="commit-header">
-                        <span className="commit-sha">{commit.shortSha}</span>
                         <span className="commit-date">{formatDate(commit.author.date)}</span>
-                      </div>
-                      <div className="commit-message">
-                        {commit.message.split("\n")[0]}
+                        <span className="commit-sha">{commit.shortSha}</span>
                       </div>
                       <div className="commit-author">{commit.author.name}</div>
                       {isHead && <div className="commit-badge">COMPARE</div>}
