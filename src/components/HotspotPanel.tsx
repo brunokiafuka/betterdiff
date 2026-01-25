@@ -13,6 +13,10 @@ export const HotspotPanel: React.FC = () => {
   const [sortBy, setSortBy] = useState<'score' | 'changes' | 'churn'>('score')
 
   useEffect(() => {
+    // Clear analysis when repo changes
+    setAnalysis(null)
+    setError(null)
+    
     if (currentRepo && headRef && (currentRepo.type === 'github' || currentRepo.type === 'local')) {
       loadHotspots()
     }

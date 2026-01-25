@@ -44,6 +44,7 @@ declare global {
       localHotspot: {
         analyze: (repoPath: string, ref: string, timeWindow?: number) => Promise<any>
       }
+      onMenuAction: (action: string, callback: () => void) => () => void
     }
   }
 }

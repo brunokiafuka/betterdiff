@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, Menu } from 'electron'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { Octokit } from '@octokit/rest'
@@ -8,6 +8,9 @@ import { execSync } from 'child_process'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+// Set app name
+app.setName('WhoDidIt')
 
 // Store GitHub token in memory (for testing - will use secure storage later)
 let githubToken: string | null = null
@@ -21,6 +24,7 @@ function createWindow() {
     height: 1000,
     minWidth: 1200,
     minHeight: 800,
+    title: 'WhoDidIt',
     titleBarStyle: 'hiddenInset',
     webPreferences: {
       preload: path.join(__dirname, '../preload/preload.cjs'),
@@ -43,6 +47,52 @@ function createWindow() {
   })
 }
 
+function createMenu() {
+  const template: Electron.MenuItemConstructorOptions[] = [
+    {
+      label: 'File',
+      submenu: [
+        {
+          label: 'Settings',
+          accelerator: 'CmdOrCtrl+,',
+          click: () => {
+            if (mainWindow) {
+              mainWindow.webContents.send('menu:open-settings')
+            }
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Open',
+          submenu: [
+            {
+              label: 'Remote Repository...',
+              accelerator: 'CmdOrCtrl+O',
+              click: () => {
+                if (mainWindow) {
+                  mainWindow.webContents.send('menu:open-remote-repo')
+                }
+              }
+            },
+            {
+              label: 'Local Repository...',
+              accelerator: 'CmdOrCtrl+Shift+O',
+              click: () => {
+                if (mainWindow) {
+                  mainWindow.webContents.send('menu:open-local-repo')
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+
+  const menu = Menu.buildFromTemplate(template)
+  Menu.setApplicationMenu(menu)
+}
+
 app.whenReady().then(() => {
   // Load config on startup
   const config = readConfig()
@@ -52,6 +102,7 @@ app.whenReady().then(() => {
     console.log('✓ Loaded GitHub token from config')
   }
   
+  // createMenu()
   createWindow()
 
   app.on('activate', () => {

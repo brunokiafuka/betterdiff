@@ -91,11 +91,14 @@ export const RepoSearchModal: React.FC<RepoSearchModalProps> = ({
       <div className="repo-search-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div className="modal-instructions">
-            Select to open (⌘K to search, ↑↓ to navigate, Enter to select, Esc to close)
+            Select to open (↑↓ to navigate, Enter to select, Esc to close)
           </div>
-          <button className="modal-close" onClick={onClose} title="Close (Esc)">
-            <X size={20} />
-          </button>
+          <div className="modal-header-right">
+            <span className="modal-label">repositories</span>
+            <button className="modal-close" onClick={onClose} title="Close (Esc)">
+              <X size={16} />
+            </button>
+          </div>
         </div>
 
         <div className="modal-search">
@@ -114,7 +117,7 @@ export const RepoSearchModal: React.FC<RepoSearchModalProps> = ({
               onClick={() => setSearchQuery('')}
               title="Clear search"
             >
-              <X size={16} />
+              <X size={14} />
             </button>
           )}
         </div>
@@ -147,8 +150,8 @@ export const RepoSearchModal: React.FC<RepoSearchModalProps> = ({
                     <Globe size={18} className="repo-item-icon" />
                   )}
                   <div className="repo-item-details">
-                    <div className="repo-item-name">{repo.fullName}</div>
-                    <div className="repo-item-path">{repo.owner}/{repo.name}</div>
+                    <div className="repo-item-name">{repo.fullName || repo.name}</div>
+                    <div className="repo-item-path">{repo.owner ? `${repo.owner}/${repo.name}` : repo.localPath || ''}</div>
                   </div>
                   {isRecent && onRemoveRecent && (
                     <button
@@ -165,13 +168,6 @@ export const RepoSearchModal: React.FC<RepoSearchModalProps> = ({
           )}
         </div>
 
-        <div className="modal-footer">
-          <div className="modal-actions">
-            <button className="modal-action-btn" onClick={onClose}>
-              Cancel
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   )

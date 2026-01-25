@@ -26,7 +26,27 @@ function App() {
     }
 
     window.addEventListener('open-settings', handleOpenSettings)
-    return () => window.removeEventListener('open-settings', handleOpenSettings)
+    
+    // Listen for menu events from main process
+    // @ts-ignore - onMenuAction is defined in preload
+    const cleanupSettings = window.electronAPI.onMenuAction('open-settings', () => {
+      setShowSettings(true)
+    })
+    // @ts-ignore - onMenuAction is defined in preload
+    const cleanupRemote = window.electronAPI.onMenuAction('open-remote-repo', () => {
+      window.dispatchEvent(new CustomEvent('menu:open-remote-repo'))
+    })
+    // @ts-ignore - onMenuAction is defined in preload
+    const cleanupLocal = window.electronAPI.onMenuAction('open-local-repo', () => {
+      window.dispatchEvent(new CustomEvent('menu:open-local-repo'))
+    })
+    
+    return () => {
+      window.removeEventListener('open-settings', handleOpenSettings)
+      cleanupSettings()
+      cleanupRemote()
+      cleanupLocal()
+    }
   }, [])
 
   // Show settings if explicitly opened

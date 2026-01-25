@@ -23,18 +23,17 @@
 }
 
 .repo-search-modal {
-  width: 90%;
-  max-width: 720px;
-  max-height: 80vh;
-  background: var(--bg-secondary);
-  border-radius: var(--radius-xl);
-  border: var(--border-width) solid var(--border-default);
-  box-shadow: var(--shadow-xl), 0 0 0 1px var(--border-subtle);
+  width: 560px;
+  max-height: 85vh;
+  min-height: 400px;
+  background: #1e1e1e;
+  border-radius: 12px;
+  border: 1px solid #3c3c3c;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: slideUp var(--transition-slow);
-  backdrop-filter: blur(20px) saturate(180%);
+  animation: slideUp 0.2s ease-out;
 }
 
 @keyframes slideUp {
@@ -50,197 +49,205 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: var(--space-md) var(--space-lg);
-  border-bottom: var(--border-width) solid var(--border-subtle);
-  background: var(--bg-elevated);
+  padding: 12px 16px;
+  border-bottom: 1px solid #3c3c3c;
+  background: #252526;
 }
 
 .modal-instructions {
   font-size: 11px;
-  color: var(--text-tertiary);
-  font-weight: 500;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+  color: #999;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+}
+
+.modal-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-label {
+  font-size: 11px;
+  color: #666;
+  font-weight: 400;
+  text-transform: lowercase;
 }
 
 .modal-close {
   background: transparent;
   border: none;
-  color: var(--text-tertiary);
+  color: #999;
   cursor: pointer;
-  padding: var(--space-xs);
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-base);
-  width: 32px;
-  height: 32px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.15s;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .modal-close:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+  color: #cccccc;
 }
 
 .modal-close svg {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   stroke-width: 2;
 }
 
 .modal-search {
   position: relative;
-  padding: var(--space-lg);
-  border-bottom: var(--border-width) solid var(--border-subtle);
+  padding: 12px 16px;
+  border-bottom: 1px solid #3c3c3c;
+  background: #252526;
 }
 
 .search-input {
   width: 100%;
-  padding: var(--space-md) 44px var(--space-md) var(--space-lg);
-  background: var(--bg-elevated);
-  border: var(--border-width) solid var(--border-default);
-  border-radius: var(--radius-md);
-  color: var(--text-primary);
-  font-size: 14px;
-  font-family: var(--font-mono);
-  transition: all var(--transition-base);
+  padding: 8px 32px 8px 12px;
+  background: #1e1e1e;
+  border: 1px solid #3c3c3c;
+  border-radius: 6px;
+  color: #cccccc;
+  font-size: 13px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  transition: all 0.15s;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(94, 106, 210, 0.1);
-  background: var(--bg-hover);
+  border-color: #007acc;
+  background: #252526;
 }
 
 .search-input::placeholder {
-  color: var(--text-tertiary);
+  color: #666;
 }
 
 .search-clear {
   position: absolute;
-  right: 32px;
+  right: 24px;
   top: 50%;
   transform: translateY(-50%);
   background: transparent;
   border: none;
-  color: var(--text-tertiary);
+  color: #666;
   cursor: pointer;
-  padding: var(--space-xs);
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-base);
-  width: 28px;
-  height: 28px;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.15s;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .search-clear:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.1);
+  color: #cccccc;
 }
 
 .search-clear svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   stroke-width: 2;
 }
 
 .modal-content {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-sm) 0;
+  padding: 4px 0;
   min-height: 200px;
-  max-height: calc(80vh - 200px);
+  max-height: calc(85vh - 140px);
 }
 
 .repo-item {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
-  padding: var(--space-md) var(--space-lg);
+  gap: 12px;
+  padding: 10px 16px;
   cursor: pointer;
-  transition: all var(--transition-base);
-  border-left: 1.5px solid transparent;
+  transition: background 0.1s;
   position: relative;
 }
 
 .repo-item:hover {
-  background: var(--bg-hover);
+  background: #2a2d2e;
 }
 
 .repo-item.selected {
-  background: var(--bg-active);
-  border-left-color: var(--accent-primary);
-}
-
-.repo-item.recent {
-  border-left-color: var(--success);
+  background: #37373d;
 }
 
 .repo-item-icon {
   flex-shrink: 0;
-  color: var(--text-tertiary);
+  color: #858585;
   display: flex;
   align-items: center;
 }
 
 .repo-item:hover .repo-item-icon {
-  color: var(--text-primary);
+  color: #cccccc;
 }
 
 .repo-item.selected .repo-item-icon {
-  color: var(--accent-primary);
+  color: #cccccc;
 }
 
 .repo-item-icon svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   stroke-width: 2;
 }
 
 .repo-item-details {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .repo-item-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-primary);
-  margin-bottom: var(--space-xs);
-  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 400;
+  color: #cccccc;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  letter-spacing: -0.1px;
+  line-height: 1.4;
 }
 
 .repo-item-path {
-  font-size: 12px;
-  color: var(--text-tertiary);
+  font-size: 11px;
+  color: #858585;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.4;
 }
 
 .repo-item-remove {
   background: transparent;
   border: none;
-  color: var(--text-tertiary);
+  color: #666;
   cursor: pointer;
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-sm);
-  transition: all var(--transition-base);
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.15s;
   opacity: 0;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 20px;
+  height: 20px;
 }
 
 .repo-item:hover .repo-item-remove {
@@ -248,65 +255,35 @@
 }
 
 .repo-item-remove:hover {
-  background: var(--error-bg);
-  color: var(--error);
+  background: rgba(244, 135, 113, 0.2);
+  color: #f48771;
 }
 
 .repo-item-remove svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   stroke-width: 2;
 }
 
 .modal-empty {
-  padding: var(--space-3xl) var(--space-xl);
+  padding: 48px 24px;
   text-align: center;
-  color: var(--text-tertiary);
+  color: #666;
 }
 
 .modal-empty p {
-  margin: var(--space-sm) 0;
-  font-size: 14px;
+  margin: 8px 0;
+  font-size: 13px;
 }
 
 .empty-hint {
-  font-size: 12px;
-  color: var(--text-quaternary);
-}
-
-.modal-footer {
-  padding: var(--space-md) var(--space-lg);
-  border-top: 1px solid var(--border-subtle);
-  background: var(--bg-elevated);
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-sm);
-}
-
-.modal-action-btn {
-  padding: var(--space-sm) var(--space-lg);
-  background: transparent;
-  border: var(--border-width) solid var(--border-default);
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--transition-base);
-}
-
-.modal-action-btn:hover {
-  background: var(--bg-hover);
-  border-color: var(--border-strong);
-  color: var(--text-primary);
+  font-size: 11px;
+  color: #555;
 }
 
 /* Scrollbar styling */
 .modal-content::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
 }
 
 .modal-content::-webkit-scrollbar-track {
@@ -314,10 +291,10 @@
 }
 
 .modal-content::-webkit-scrollbar-thumb {
-  background: var(--border-default);
-  border-radius: 3px;
+  background: #424242;
+  border-radius: 5px;
 }
 
 .modal-content::-webkit-scrollbar-thumb:hover {
-  background: var(--border-strong);
+  background: #4e4e4e;
 }

@@ -36,7 +36,14 @@ export const useAppStore = create<AppState>((set) => ({
   viewMode: 'side-by-side',
   rightPanelTab: 'details',
   
-  setRepo: (repo) => set({ currentRepo: repo }),
+  setRepo: (repo) => set({ 
+    currentRepo: repo,
+    // Clear related state when repo changes
+    currentComparison: null,
+    selectedFile: null,
+    baseRef: null,
+    headRef: null,
+  }),
   setRefs: (base, head) => set({ baseRef: base, headRef: head }),
   setComparison: (comparison) => set({ currentComparison: comparison }),
   selectFile: (file) => set({ selectedFile: file }),

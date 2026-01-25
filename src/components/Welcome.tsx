@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAppStore } from '../stores/appStore'
 import { RepoSearchModal } from './RepoSearchModal'
 import { Settings, FolderOpen, HardDrive, Globe } from 'lucide-react'
@@ -50,7 +50,8 @@ export const Welcome: React.FC = () => {
         }
         return r
       })
-      setRecentRepos(recent.slice(0, 5)) // Last 5
+      // Only show remote repos in recent list for the modal
+      setRecentRepos(recent.filter((r: any) => r.type !== 'local' && !r.localPath).slice(0, 5))
     } catch (err) {
       console.error('Failed to load recent repos:', err)
     }
@@ -61,7 +62,8 @@ export const Welcome: React.FC = () => {
     setError(null)
     try {
       const repoList = await window.electronAPI.github.fetchRepos()
-      setRepos(repoList)
+      // Only keep remote (GitHub) repos for the modal
+      setRepos(repoList.filter((r: any) => r.type !== 'local' && !r.localPath))
     } catch (err: any) {
       setError(err.message || 'Failed to load repositories')
       console.error('Failed to load repos:', err)
@@ -70,7 +72,7 @@ export const Welcome: React.FC = () => {
     }
   }
 
-  const handleSelectLocalRepo = async () => {
+  const handleSelectLocalRepo = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
@@ -120,7 +122,24 @@ export const Welcome: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [setRepo, setRefs])
+
+  // Listen for menu events (after handleSelectLocalRepo is defined)
+  useEffect(() => {
+    const handleMenuOpenRemote = () => {
+      if (configExists && repos.length > 0) {
+        setShowModal(true)
+      }
+    }
+
+    window.addEventListener('menu:open-remote-repo', handleMenuOpenRemote)
+    window.addEventListener('menu:open-local-repo', handleSelectLocalRepo)
+
+    return () => {
+      window.removeEventListener('menu:open-remote-repo', handleMenuOpenRemote)
+      window.removeEventListener('menu:open-local-repo', handleSelectLocalRepo)
+    }
+  }, [configExists, repos.length, handleSelectLocalRepo])
 
   const handleSelectRepo = async (repo: any) => {
     setShowModal(false) // Close modal when repo is selected
@@ -333,9 +352,13 @@ export const Welcome: React.FC = () => {
             onRemoveRecent={async (repo) => {
               try {
                 const config = await window.electronAPI.config.read() || {}
-                const recent = (config.recentRepos || []).filter((r: any) => r.fullName !== repo.fullName)
+                const recent = (config.recentRepos || []).filter((r: any) =>
+                  r.type === 'local'
+                    ? r.localPath !== repo.localPath
+                    : r.fullName !== repo.fullName
+                )
                 await window.electronAPI.config.write({ ...config, recentRepos: recent })
-                setRecentRepos(recent.slice(0, 5))
+                setRecentRepos(recent.filter((r: any) => r.type !== 'local' && !r.localPath).slice(0, 5))
               } catch (err) {
                 console.error('Failed to remove recent repo:', err)
               }

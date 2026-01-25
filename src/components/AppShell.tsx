@@ -31,11 +31,22 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [currentRepo])
 
+  // Listen for menu events to open repo modal
+  useEffect(() => {
+    const handleMenuOpenRemote = () => {
+      setShowModal(true)
+    }
+
+    window.addEventListener('menu:open-remote-repo', handleMenuOpenRemote)
+    return () => window.removeEventListener('menu:open-remote-repo', handleMenuOpenRemote)
+  }, [])
+
   useEffect(() => {
     const loadRepos = async () => {
       try {
         const repoList = await window.electronAPI.github.fetchRepos()
-        setRepos(repoList)
+        // Only keep remote (GitHub) repos
+        setRepos(repoList.filter((r: any) => r.type !== 'local' && !r.localPath))
       } catch (err) {
         console.error('Failed to load repos:', err)
       }
@@ -51,7 +62,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
           }
           return r
         })
-        setRecentRepos(recent.slice(0, 5))
+        // Only keep remote repos for the modal
+        setRecentRepos(recent.filter((r: any) => r.type !== 'local' && !r.localPath).slice(0, 5))
       } catch (err) {
         console.error('Failed to load recent repos:', err)
       }
@@ -77,9 +89,9 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
       try {
         const config = await window.electronAPI.config.read() || {}
         const recent = config.recentRepos || []
-        const filtered = recent.filter((r: any) => 
-          r.type === 'local' 
-            ? r.localPath !== repo.localPath 
+        const filtered = recent.filter((r: any) =>
+          r.type === 'local'
+            ? r.localPath !== repo.localPath
             : r.fullName !== repo.fullName
         )
         const updated = [{ ...repo, lastAccessed: new Date().toISOString() }, ...filtered].slice(0, 10)
@@ -104,9 +116,9 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
         if (branches.length > 0) {
           // Try to find main, then master, then defaultBranch, then first branch
           const defaultBranch = branches.find((b: any) => b.name === 'main') ||
-                               branches.find((b: any) => b.name === 'master') ||
-                               branches.find((b: any) => b.name === repo.defaultBranch) ||
-                               branches[0]
+            branches.find((b: any) => b.name === 'master') ||
+            branches.find((b: any) => b.name === repo.defaultBranch) ||
+            branches[0]
           setRefs(defaultBranch, defaultBranch)
         }
       }
@@ -124,29 +136,22 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
               <>
                 <button
                   className="repo-name-btn"
-                  onClick={() => setShowModal(true)}
+
                   title="Click to change repository"
                 >
                   {currentRepo.fullName}
                 </button>
                 <BranchSelector />
               </>
-            ) : (
-              <button
-                className="btn-select-repo"
-                onClick={() => setShowModal(true)}
-              >
-                Select Repository
-              </button>
-            )}
+            ) : null}
           </div>
         </div>
 
         <div className="top-bar-right">
           {currentRepo && (
             <>
-              <button 
-                className="btn-action btn-icon" 
+              <button
+                className="btn-action btn-icon"
                 onClick={() => {
                   window.dispatchEvent(new CustomEvent('open-hotspots-panel'))
                 }}
@@ -155,8 +160,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
               >
                 <Flame size={18} />
               </button>
-              <button 
-                className="btn-action btn-icon" 
+              <button
+                className="btn-action btn-icon"
                 onClick={() => {
                   window.dispatchEvent(new CustomEvent('open-ai-panel'))
                 }}
@@ -191,13 +196,13 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
           onRemoveRecent={async (repo) => {
             try {
               const config = await window.electronAPI.config.read() || {}
-              const recent = (config.recentRepos || []).filter((r: any) => 
-                r.type === 'local' 
-                  ? r.localPath !== repo.localPath 
+              const recent = (config.recentRepos || []).filter((r: any) =>
+                r.type === 'local'
+                  ? r.localPath !== repo.localPath
                   : r.fullName !== repo.fullName
               )
               await window.electronAPI.config.write({ ...config, recentRepos: recent })
-              setRecentRepos(recent.slice(0, 5))
+              setRecentRepos(recent.filter((r: any) => r.type !== 'local' && !r.localPath).slice(0, 5))
             } catch (err) {
               console.error('Failed to remove recent repo:', err)
             }

@@ -17,6 +17,15 @@ export const FileExplorerView: React.FC = () => {
   const [showHotspotsPanel, setShowHotspotsPanel] = useState(false)
   const { currentRepo } = useAppStore()
 
+  // Clear state when repo changes
+  useEffect(() => {
+    setSelectedFilePath(null)
+    setSelectedCommits(null)
+    setShowDetailsPanel(false)
+    setShowAIPanel(false)
+    setShowHotspotsPanel(false)
+  }, [currentRepo])
+
   // Listen for file selection events from FileTreePanel
   useEffect(() => {
     const handleFileSelected = (event: CustomEvent) => {

@@ -66,6 +66,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   localHotspot: {
     analyze: (repoPath: string, ref: string, timeWindow?: number) =>
       ipcRenderer.invoke('local:hotspot:analyze', repoPath, ref, timeWindow),
+  },
+  
+  // Menu events
+  onMenuAction: (action: string, callback: () => void) => {
+    ipcRenderer.on(`menu:${action}`, callback)
+    return () => ipcRenderer.removeListener(`menu:${action}`, callback)
   }
 })
 
@@ -111,6 +117,7 @@ declare global {
       localHotspot: {
         analyze: (repoPath: string, ref: string, timeWindow?: number) => Promise<any>
       }
+      onMenuAction: (action: string, callback: () => void) => () => void
     }
   }
 }

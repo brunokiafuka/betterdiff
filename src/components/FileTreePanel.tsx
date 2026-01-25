@@ -155,7 +155,6 @@ export const FileTreePanel: React.FC = () => {
     <div className="file-tree-panel">
       <div className="file-tree-header">
         <h3>Files</h3>
-        <span className="file-tree-branch">{baseRef.name}</span>
       </div>
 
       {loading ? (
