@@ -14,7 +14,7 @@ interface AppState {
   // UI state
   showBlame: boolean
   viewMode: 'side-by-side' | 'inline' | 'timeline'
-  rightPanelTab: 'details' | 'blame' | 'explain'
+  rightPanelTab: 'details' | 'blame' | 'explain' | 'hotspots'
   
   // Actions
   setRepo: (repo: Repo) => void
@@ -23,7 +23,7 @@ interface AppState {
   selectFile: (file: FileChange) => void
   toggleBlame: () => void
   setViewMode: (mode: 'side-by-side' | 'inline' | 'timeline') => void
-  setRightPanelTab: (tab: 'details' | 'blame' | 'explain') => void
+  setRightPanelTab: (tab: 'details' | 'blame' | 'explain' | 'hotspots') => void
 }
 
 export const useAppStore = create<AppState>((set) => ({

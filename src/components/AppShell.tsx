@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Settings, Sparkles } from 'lucide-react'
+import { Settings, Sparkles, Flame } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import { RepoSearchModal } from './RepoSearchModal'
 import { BranchSelector } from './BranchSelector'
@@ -11,10 +11,25 @@ interface AppShellProps {
 }
 
 export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick }) => {
-  const { currentRepo, showBlame, toggleBlame, setRepo, setRefs } = useAppStore()
+  const { currentRepo, setRepo, setRefs } = useAppStore()
   const [showModal, setShowModal] = useState(false)
   const [repos, setRepos] = useState<any[]>([])
   const [recentRepos, setRecentRepos] = useState<any[]>([])
+
+  // Keyboard shortcut: Cmd+A to open AI panel
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
+        e.preventDefault()
+        if (currentRepo) {
+          window.dispatchEvent(new CustomEvent('open-ai-panel'))
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [currentRepo])
 
   useEffect(() => {
     const loadRepos = async () => {
@@ -132,8 +147,21 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
             <>
               <button 
                 className="btn-action btn-icon" 
-                title="Explain (⌘E)"
-                aria-label="Explain"
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('open-hotspots-panel'))
+                }}
+                title="Hotspots (Frequently Changed Files)"
+                aria-label="Hotspots"
+              >
+                <Flame size={18} />
+              </button>
+              <button 
+                className="btn-action btn-icon" 
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('open-ai-panel'))
+                }}
+                title="AI Analysis (⌘A)"
+                aria-label="AI Analysis"
               >
                 <Sparkles size={18} />
               </button>

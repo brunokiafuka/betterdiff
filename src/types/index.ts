@@ -69,3 +69,22 @@ export interface FileView {
   newContent: string | null
   blameChunks: BlameChunk[]
 }
+
+export interface HotspotFile {
+  path: string
+  changeCount: number
+  churn: number
+  recencyScore: number
+  authorCount: number
+  hotspotScore: number
+  lastModified: string
+  commits: string[] // Array of commit SHAs
+}
+
+export interface HotspotAnalysis {
+  repo: string
+  ref: string
+  timeWindow: number // days
+  analyzedAt: string
+  files: HotspotFile[]
+}

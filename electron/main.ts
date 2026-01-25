@@ -843,3 +843,381 @@ ipcMain.handle('local:getBlame', async (_event, repoPath: string, ref: string, f
   }
 })
 
+// Hotspot detection
+ipcMain.handle('hotspot:analyze', async (_event, repoFullName: string, ref: string, timeWindow: number = 30) => {
+  if (!octokit) {
+    throw new Error('Not authenticated')
+  }
+  
+  try {
+    const [owner, repo] = repoFullName.split('/')
+    
+    // Calculate the date threshold
+    const sinceDate = new Date()
+    sinceDate.setDate(sinceDate.getDate() - timeWindow)
+    
+    // Fetch commits within the time window
+    const allCommits: any[] = []
+    let page = 1
+    const perPage = 100
+    
+    while (true) {
+      const { data } = await octokit.repos.listCommits({
+        owner,
+        repo,
+        sha: ref,
+        since: sinceDate.toISOString(),
+        per_page: perPage,
+        page
+      })
+      
+      if (data.length === 0) break
+      allCommits.push(...data)
+      
+      if (data.length < perPage) break
+      page++
+      
+      // Limit to 1000 commits for performance
+      if (allCommits.length >= 1000) break
+    }
+    
+    // Aggregate file changes
+    const fileStats = new Map<string, {
+      changeCount: number
+      churn: number
+      authors: Set<string>
+      commits: string[]
+      lastModified: string
+      recencyWeights: number[]
+    }>()
+    
+    const now = Date.now()
+    
+    for (const commit of allCommits) {
+      const commitDate = new Date(commit.commit.author?.date || commit.commit.committer?.date || '')
+      const daysAgo = (now - commitDate.getTime()) / (1000 * 60 * 60 * 24)
+      
+      // Calculate recency weight
+      let recencyWeight = 0.2
+      if (daysAgo <= 7) recencyWeight = 1.0
+      else if (daysAgo <= 14) recencyWeight = 0.8
+      else if (daysAgo <= 30) recencyWeight = 0.6
+      else if (daysAgo <= 90) recencyWeight = 0.4
+      
+      // Get commit details to see file changes
+      try {
+        const { data: commitData } = await octokit.repos.getCommit({
+          owner,
+          repo,
+          ref: commit.sha
+        })
+        
+        if (commitData.files) {
+          for (const file of commitData.files) {
+            if (file.status === 'removed') continue
+            
+            const path = file.filename
+            const stats = fileStats.get(path) || {
+              changeCount: 0,
+              churn: 0,
+              authors: new Set<string>(),
+              commits: [],
+              lastModified: commitDate.toISOString(),
+              recencyWeights: []
+            }
+            
+            stats.changeCount++
+            stats.churn += (file.additions || 0) + (file.deletions || 0)
+            stats.authors.add(commit.commit.author?.name || commit.commit.committer?.name || 'Unknown')
+            stats.commits.push(commit.sha)
+            stats.recencyWeights.push(recencyWeight)
+            
+            // Update last modified if this commit is more recent
+            if (new Date(stats.lastModified) < commitDate) {
+              stats.lastModified = commitDate.toISOString()
+            }
+            
+            fileStats.set(path, stats)
+          }
+        }
+      } catch (err) {
+        // Skip commits we can't fetch details for
+        console.warn(`Failed to fetch commit ${commit.sha}:`, err)
+      }
+    }
+    
+    // Calculate hotspot scores
+    const hotspotFiles: any[] = []
+    
+    // Find max values for normalization
+    let maxChangeCount = 0
+    let maxChurn = 0
+    
+    for (const stats of Array.from(fileStats.values())) {
+      if (stats.changeCount > maxChangeCount) maxChangeCount = stats.changeCount
+      if (stats.churn > maxChurn) maxChurn = stats.churn
+    }
+    
+    for (const [path, stats] of Array.from(fileStats.entries())) {
+      // Calculate recency score (weighted average)
+      const recencyScore = stats.recencyWeights.length > 0
+        ? stats.recencyWeights.reduce((a: number, b: number) => a + b, 0) / stats.recencyWeights.length
+        : 0
+      
+      // Normalize metrics (0-1 range)
+      const normalizedChangeCount = maxChangeCount > 0 ? stats.changeCount / maxChangeCount : 0
+      const normalizedChurn = maxChurn > 0 ? stats.churn / maxChurn : 0
+      const normalizedRecency = recencyScore // Already 0-1
+      const normalizedAuthors = Math.min(stats.authors.size / 5, 1) // Cap at 5 authors
+      
+      // Calculate hotspot score
+      const hotspotScore = (
+        normalizedChangeCount * 0.4 +
+        normalizedChurn * 0.3 +
+        normalizedRecency * 0.2 +
+        normalizedAuthors * 0.1
+      ) * 100
+      
+      hotspotFiles.push({
+        path,
+        changeCount: stats.changeCount,
+        churn: stats.churn,
+        recencyScore: normalizedRecency,
+        authorCount: stats.authors.size,
+        hotspotScore: Math.round(hotspotScore * 100) / 100,
+        lastModified: stats.lastModified,
+        commits: stats.commits.slice(0, 50) // Limit to 50 commits
+      })
+    }
+    
+    // Sort by hotspot score (descending)
+    hotspotFiles.sort((a, b) => b.hotspotScore - a.hotspotScore)
+    
+    return {
+      repo: repoFullName,
+      ref,
+      timeWindow,
+      analyzedAt: new Date().toISOString(),
+      files: hotspotFiles
+    }
+  } catch (error: any) {
+    console.error('Failed to analyze hotspots:', error.message)
+    throw error
+  }
+})
+
+// Local Git hotspot detection
+ipcMain.handle('local:hotspot:analyze', async (_event, repoPath: string, ref: string, timeWindow: number = 30) => {
+  try {
+    // Validate repo path
+    if (!fs.existsSync(repoPath)) {
+      throw new Error(`Repository path does not exist: ${repoPath}`)
+    }
+    
+    if (!isGitRepo(repoPath)) {
+      throw new Error(`Path is not a Git repository: ${repoPath}`)
+    }
+    
+    // Calculate the date threshold
+    const sinceDate = new Date()
+    sinceDate.setDate(sinceDate.getDate() - timeWindow)
+    const sinceDateStr = sinceDate.toISOString().split('T')[0] // YYYY-MM-DD format
+    
+    // Get all commits within the time window
+    let commitsOutput: string
+    try {
+      // Use --since with date string - format: "YYYY-MM-DD" or "30 days ago"
+      // Try using "X days ago" format which is more reliable
+      const daysAgo = `${timeWindow} days ago`
+      commitsOutput = execGitCommand(repoPath, `log --format="%H|%an|%ae|%ad|%s" --date=iso --since="${daysAgo}" ${ref}`)
+    } catch (err: any) {
+      // If git log fails (e.g., invalid ref), return empty result
+      console.warn(`Git log failed for ${ref}:`, err.message)
+      return {
+        repo: repoPath,
+        ref,
+        timeWindow,
+        analyzedAt: new Date().toISOString(),
+        files: []
+      }
+    }
+    
+    const commitLines = commitsOutput.split('\n').filter(line => line.trim())
+    
+    if (commitLines.length === 0) {
+      return {
+        repo: repoPath,
+        ref,
+        timeWindow,
+        analyzedAt: new Date().toISOString(),
+        files: []
+      }
+    }
+    
+    // Parse commits
+    const commits: Array<{
+      sha: string
+      author: string
+      email: string
+      date: string
+      message: string
+    }> = []
+    
+    for (const line of commitLines) {
+      const parts = line.split('|')
+      if (parts.length >= 5) {
+        commits.push({
+          sha: parts[0],
+          author: parts[1],
+          email: parts[2],
+          date: parts[3],
+          message: parts.slice(4).join('|')
+        })
+      }
+    }
+    
+    // Limit to 1000 commits for performance
+    const commitsToAnalyze = commits.slice(0, 1000)
+    
+    // Aggregate file changes
+    const fileStats = new Map<string, {
+      changeCount: number
+      churn: number
+      authors: Set<string>
+      commits: string[]
+      lastModified: string
+      recencyWeights: number[]
+    }>()
+    
+    const now = Date.now()
+    
+    for (const commit of commitsToAnalyze) {
+      const commitDate = new Date(commit.date)
+      const daysAgo = (now - commitDate.getTime()) / (1000 * 60 * 60 * 24)
+      
+      // Calculate recency weight
+      let recencyWeight = 0.2
+      if (daysAgo <= 7) recencyWeight = 1.0
+      else if (daysAgo <= 14) recencyWeight = 0.8
+      else if (daysAgo <= 30) recencyWeight = 0.6
+      else if (daysAgo <= 90) recencyWeight = 0.4
+      
+      // Get file changes for this commit
+      try {
+        // Get list of changed files
+        const filesOutput = execGitCommand(repoPath, `diff-tree --no-commit-id --name-status -r ${commit.sha}`)
+        const fileLines = filesOutput.split('\n').filter(line => line.trim())
+        
+        for (const fileLine of fileLines) {
+          const match = fileLine.match(/^([AMD])\s+(.+)$/)
+          if (!match) continue
+          
+          const [, status, filePath] = match
+          
+          // Skip deleted files
+          if (status === 'D') continue
+          
+          const stats = fileStats.get(filePath) || {
+            changeCount: 0,
+            churn: 0,
+            authors: new Set<string>(),
+            commits: [],
+            lastModified: commitDate.toISOString(),
+            recencyWeights: []
+          }
+          
+          stats.changeCount++
+          
+          // Get additions and deletions for this file in this commit
+          try {
+            const statLine = execGitCommand(repoPath, `diff --numstat ${commit.sha}^..${commit.sha} -- "${filePath}"`)
+            if (statLine) {
+              const statMatch = statLine.match(/^(\d+)\s+(\d+)/)
+              if (statMatch) {
+                const additions = parseInt(statMatch[1]) || 0
+                const deletions = parseInt(statMatch[2]) || 0
+                stats.churn += additions + deletions
+              }
+            }
+          } catch (err) {
+            // If we can't get stats (e.g., new file), just count it as a change
+            stats.churn += 1
+          }
+          
+          stats.authors.add(commit.author)
+          stats.commits.push(commit.sha)
+          stats.recencyWeights.push(recencyWeight)
+          
+          // Update last modified if this commit is more recent
+          if (new Date(stats.lastModified) < commitDate) {
+            stats.lastModified = commitDate.toISOString()
+          }
+          
+          fileStats.set(filePath, stats)
+        }
+      } catch (err) {
+        // Skip commits we can't analyze
+        console.warn(`Failed to analyze commit ${commit.sha}:`, err)
+      }
+    }
+    
+    // Calculate hotspot scores
+    const hotspotFiles: any[] = []
+    
+    // Find max values for normalization
+    let maxChangeCount = 0
+    let maxChurn = 0
+    
+    for (const stats of Array.from(fileStats.values())) {
+      if (stats.changeCount > maxChangeCount) maxChangeCount = stats.changeCount
+      if (stats.churn > maxChurn) maxChurn = stats.churn
+    }
+    
+    for (const [path, stats] of Array.from(fileStats.entries())) {
+      // Calculate recency score (weighted average)
+      const recencyScore = stats.recencyWeights.length > 0
+        ? stats.recencyWeights.reduce((a: number, b: number) => a + b, 0) / stats.recencyWeights.length
+        : 0
+      
+      // Normalize metrics (0-1 range)
+      const normalizedChangeCount = maxChangeCount > 0 ? stats.changeCount / maxChangeCount : 0
+      const normalizedChurn = maxChurn > 0 ? stats.churn / maxChurn : 0
+      const normalizedRecency = recencyScore // Already 0-1
+      const normalizedAuthors = Math.min(stats.authors.size / 5, 1) // Cap at 5 authors
+      
+      // Calculate hotspot score
+      const hotspotScore = (
+        normalizedChangeCount * 0.4 +
+        normalizedChurn * 0.3 +
+        normalizedRecency * 0.2 +
+        normalizedAuthors * 0.1
+      ) * 100
+      
+      hotspotFiles.push({
+        path,
+        changeCount: stats.changeCount,
+        churn: stats.churn,
+        recencyScore: normalizedRecency,
+        authorCount: stats.authors.size,
+        hotspotScore: Math.round(hotspotScore * 100) / 100,
+        lastModified: stats.lastModified,
+        commits: stats.commits.slice(0, 50) // Limit to 50 commits
+      })
+    }
+    
+    // Sort by hotspot score (descending)
+    hotspotFiles.sort((a, b) => b.hotspotScore - a.hotspotScore)
+    
+    return {
+      repo: repoPath,
+      ref,
+      timeWindow,
+      analyzedAt: new Date().toISOString(),
+      files: hotspotFiles
+    }
+  } catch (error: any) {
+    console.error('Failed to analyze local hotspots:', error.message)
+    throw error
+  }
+})
+

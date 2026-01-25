@@ -54,6 +54,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('local:getCommit', repoPath, sha),
     getBlame: (repoPath: string, ref: string, path: string) =>
       ipcRenderer.invoke('local:getBlame', repoPath, ref, path),
+  },
+  
+  // Hotspot detection
+  hotspot: {
+    analyze: (repo: string, ref: string, timeWindow?: number) =>
+      ipcRenderer.invoke('hotspot:analyze', repo, ref, timeWindow),
+  },
+  
+  // Local hotspot detection
+  localHotspot: {
+    analyze: (repoPath: string, ref: string, timeWindow?: number) =>
+      ipcRenderer.invoke('local:hotspot:analyze', repoPath, ref, timeWindow),
   }
 })
 
@@ -92,6 +104,12 @@ declare global {
         getFileHistory: (repoPath: string, path: string, ref: string) => Promise<any[]>
         getCommit: (repoPath: string, sha: string) => Promise<any>
         getBlame: (repoPath: string, ref: string, path: string) => Promise<any[]>
+      }
+      hotspot: {
+        analyze: (repo: string, ref: string, timeWindow?: number) => Promise<any>
+      }
+      localHotspot: {
+        analyze: (repoPath: string, ref: string, timeWindow?: number) => Promise<any>
       }
     }
   }

@@ -1,5 +1,6 @@
 import React from 'react'
 import { useAppStore } from '../stores/appStore'
+import { HotspotPanel } from './HotspotPanel'
 import './DetailPanel.css'
 
 export const DetailPanel: React.FC = () => {
@@ -25,6 +26,12 @@ export const DetailPanel: React.FC = () => {
           onClick={() => setRightPanelTab('explain')}
         >
           Explain
+        </button>
+        <button
+          className={`detail-tab ${rightPanelTab === 'hotspots' ? 'active' : ''}`}
+          onClick={() => setRightPanelTab('hotspots')}
+        >
+          Hotspots
         </button>
       </div>
       
@@ -65,6 +72,10 @@ export const DetailPanel: React.FC = () => {
               </p>
             </div>
           </div>
+        )}
+        
+        {rightPanelTab === 'hotspots' && (
+          <HotspotPanel />
         )}
       </div>
     </div>

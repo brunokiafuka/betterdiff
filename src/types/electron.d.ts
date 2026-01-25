@@ -38,6 +38,12 @@ declare global {
         getCommit: (repoPath: string, sha: string) => Promise<any>
         getBlame: (repoPath: string, ref: string, path: string) => Promise<any[]>
       }
+      hotspot: {
+        analyze: (repo: string, ref: string, timeWindow?: number) => Promise<any>
+      }
+      localHotspot: {
+        analyze: (repoPath: string, ref: string, timeWindow?: number) => Promise<any>
+      }
     }
   }
 }
