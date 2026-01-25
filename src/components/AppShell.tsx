@@ -28,7 +28,13 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
     const loadRecentRepos = async () => {
       try {
         const config = await window.electronAPI.config.read()
-        const recent = config?.recentRepos || []
+        const recent = (config?.recentRepos || []).map((r: any) => {
+          // Ensure type is set for backward compatibility
+          if (!r.type) {
+            r.type = r.localPath ? 'local' : 'github'
+          }
+          return r
+        })
         setRecentRepos(recent.slice(0, 5))
       } catch (err) {
         console.error('Failed to load recent repos:', err)
@@ -44,13 +50,22 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
   const handleSelectRepo = async (repo: any) => {
     setShowModal(false)
     try {
+      // Ensure repo has type - detect local repos by checking for localPath
+      if (!repo.type) {
+        repo.type = repo.localPath ? 'local' : 'github'
+      }
+
       setRepo(repo)
 
       // Update recent repos in config
       try {
         const config = await window.electronAPI.config.read() || {}
         const recent = config.recentRepos || []
-        const filtered = recent.filter((r: any) => r.fullName !== repo.fullName)
+        const filtered = recent.filter((r: any) => 
+          r.type === 'local' 
+            ? r.localPath !== repo.localPath 
+            : r.fullName !== repo.fullName
+        )
         const updated = [{ ...repo, lastAccessed: new Date().toISOString() }, ...filtered].slice(0, 10)
         await window.electronAPI.config.write({ ...config, recentRepos: updated })
         setRecentRepos(updated.slice(0, 5))
@@ -59,10 +74,18 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
       }
 
       // Fetch branches and set default ref
-      const branches = await window.electronAPI.github.listBranches(repo.fullName)
-      if (branches.length > 0) {
-        const defaultBranch = branches.find(b => b.name === repo.defaultBranch) || branches[0]
-        setRefs(defaultBranch, defaultBranch)
+      if (repo.type === 'local' && repo.localPath) {
+        const branches = await window.electronAPI.local.listBranches(repo.localPath)
+        if (branches.length > 0) {
+          const defaultBranch = branches.find((b: any) => b.name === repo.defaultBranch) || branches[0]
+          setRefs(defaultBranch, defaultBranch)
+        }
+      } else {
+        const branches = await window.electronAPI.github.listBranches(repo.fullName)
+        if (branches.length > 0) {
+          const defaultBranch = branches.find((b: any) => b.name === repo.defaultBranch) || branches[0]
+          setRefs(defaultBranch, defaultBranch)
+        }
       }
     } catch (err: any) {
       console.error('Failed to select repo:', err)
@@ -129,7 +152,11 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
           onRemoveRecent={async (repo) => {
             try {
               const config = await window.electronAPI.config.read() || {}
-              const recent = (config.recentRepos || []).filter((r: any) => r.fullName !== repo.fullName)
+              const recent = (config.recentRepos || []).filter((r: any) => 
+                r.type === 'local' 
+                  ? r.localPath !== repo.localPath 
+                  : r.fullName !== repo.fullName
+              )
               await window.electronAPI.config.write({ ...config, recentRepos: recent })
               setRecentRepos(recent.slice(0, 5))
             } catch (err) {

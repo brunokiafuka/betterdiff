@@ -25,6 +25,16 @@ declare global {
         write: (config: any) => Promise<{ success: boolean }>
         exists: () => Promise<boolean>
       }
+      local: {
+        selectFolder: () => Promise<any>
+        listBranches: (repoPath: string) => Promise<any[]>
+        compareRefs: (repoPath: string, base: string, head: string) => Promise<any>
+        getFileContent: (repoPath: string, ref: string, path: string) => Promise<string>
+        getRepoTree: (repoPath: string, ref: string) => Promise<any[]>
+        getFileHistory: (repoPath: string, path: string, ref: string) => Promise<any[]>
+        getCommit: (repoPath: string, sha: string) => Promise<any>
+        getBlame: (repoPath: string, ref: string, path: string) => Promise<any[]>
+      }
     }
   }
 }

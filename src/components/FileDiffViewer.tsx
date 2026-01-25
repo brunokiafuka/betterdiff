@@ -8,6 +8,7 @@ interface FileDiffViewerProps {
   baseSha: string | null
   headSha: string | null
   repoFullName: string
+  repo?: { type?: 'github' | 'local'; localPath?: string }
   onDetailsClick?: () => void
 }
 
@@ -16,6 +17,7 @@ export const FileDiffViewer: React.FC<FileDiffViewerProps> = ({
   baseSha,
   headSha,
   repoFullName,
+  repo,
   onDetailsClick
 }) => {
   const [oldContent, setOldContent] = useState('')
@@ -30,20 +32,23 @@ export const FileDiffViewer: React.FC<FileDiffViewerProps> = ({
     const loadFileContents = async () => {
       setLoading(true)
       try {
+        const isLocal = repo?.type === 'local'
         if (baseSha === headSha) {
           // Same commit - load content only once
-          const content = await window.electronAPI.github.getFileContent(
-            repoFullName,
-            baseSha,
-            filePath
-          )
+          const content = isLocal
+            ? await window.electronAPI.local.getFileContent(repo!.localPath!, baseSha, filePath)
+            : await window.electronAPI.github.getFileContent(repoFullName, baseSha, filePath)
           setOldContent(content)
           setNewContent(content)
         } else {
           // Different commits - fetch both versions
           const [oldData, newData] = await Promise.all([
-            window.electronAPI.github.getFileContent(repoFullName, baseSha, filePath),
-            window.electronAPI.github.getFileContent(repoFullName, headSha, filePath)
+            isLocal
+              ? window.electronAPI.local.getFileContent(repo!.localPath!, baseSha, filePath)
+              : window.electronAPI.github.getFileContent(repoFullName, baseSha, filePath),
+            isLocal
+              ? window.electronAPI.local.getFileContent(repo!.localPath!, headSha, filePath)
+              : window.electronAPI.github.getFileContent(repoFullName, headSha, filePath)
           ])
           setOldContent(oldData)
           setNewContent(newData)

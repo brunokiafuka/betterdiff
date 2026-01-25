@@ -32,18 +32,28 @@ export const FileHistoryPanel: React.FC<FileHistoryPanelProps> = ({ filePath, on
     const loadFileHistory = async () => {
       setLoading(true)
       try {
-        const history = await window.electronAPI.github.getFileHistory(
-          currentRepo.fullName,
-          filePath,
-          baseRef.sha
-        )
+        const history = currentRepo.type === 'local'
+          ? await window.electronAPI.local.getFileHistory(
+            currentRepo.localPath!,
+            filePath,
+            baseRef.name
+          )
+          : await window.electronAPI.github.getFileHistory(
+            currentRepo.fullName,
+            filePath,
+            baseRef.sha
+          )
 
         const formattedCommits: CommitInfo[] = history.map((commit: any) => ({
-          sha: commit.sha,
-          shortSha: commit.sha.substring(0, 7),
-          author: commit.commit.author,
-          message: commit.commit.message,
-          prNumber: extractPRNumber(commit.commit.message)
+          sha: commit.sha || commit.commit?.sha,
+          shortSha: (commit.sha || commit.commit?.sha || '').substring(0, 7),
+          author: commit.commit?.author || commit.author || {
+            name: 'Unknown',
+            email: '',
+            date: new Date().toISOString()
+          },
+          message: commit.commit?.message || commit.message || '',
+          prNumber: extractPRNumber(commit.commit?.message || commit.message || '')
         }))
 
         setCommits(formattedCommits)

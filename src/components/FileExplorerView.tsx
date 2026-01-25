@@ -50,6 +50,7 @@ export const FileExplorerView: React.FC = () => {
                 baseSha={selectedCommits?.base || null}
                 headSha={selectedCommits?.head || null}
                 repoFullName={currentRepo?.fullName || ''}
+                repo={currentRepo || undefined}
                 onDetailsClick={() => setShowDetailsPanel(true)}
               />
             </div>
@@ -80,6 +81,7 @@ export const FileExplorerView: React.FC = () => {
         <div className="file-explorer-details">
           <CommitDetailsPanel
             repoFullName={currentRepo?.fullName || ''}
+            repo={currentRepo || undefined}
             baseSha={selectedCommits.base}
             headSha={selectedCommits.head}
             onClose={() => setShowDetailsPanel(false)}

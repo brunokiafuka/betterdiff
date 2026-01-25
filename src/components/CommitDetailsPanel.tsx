@@ -4,6 +4,7 @@ import './CommitDetailsPanel.css'
 
 interface CommitDetailsPanelProps {
   repoFullName: string
+  repo?: { type?: 'github' | 'local'; localPath?: string }
   baseSha: string | null
   headSha: string | null
   onClose: () => void
@@ -11,6 +12,7 @@ interface CommitDetailsPanelProps {
 
 export const CommitDetailsPanel: React.FC<CommitDetailsPanelProps> = ({
   repoFullName,
+  repo,
   baseSha,
   headSha,
   onClose
@@ -40,14 +42,19 @@ export const CommitDetailsPanel: React.FC<CommitDetailsPanelProps> = ({
       try {
         const isSameCommit = validBaseSha && validHeadSha && baseSha === headSha
 
+        const isLocal = repo?.type === 'local'
+        const getCommitAPI = isLocal
+          ? (sha: string) => window.electronAPI.local.getCommit(repo!.localPath!, sha)
+          : (sha: string) => window.electronAPI.github.getCommit(repoFullName, sha)
+
         if (isSameCommit) {
           // Same commit - load once and set both
           console.log('Loading same commit:', baseSha)
           try {
-            if (!window.electronAPI?.github?.getCommit) {
+            if (!getCommitAPI) {
               throw new Error('getCommit function not available. Please restart the Electron app.')
             }
-            const commitData = await window.electronAPI.github.getCommit(repoFullName, baseSha!)
+            const commitData = await getCommitAPI(baseSha!)
             console.log('Loaded commit data:', commitData)
             if (commitData) {
               setBaseCommit(commitData)
@@ -65,12 +72,12 @@ export const CommitDetailsPanel: React.FC<CommitDetailsPanelProps> = ({
           const promises: Promise<any>[] = []
 
           if (validBaseSha) {
-            if (!window.electronAPI?.github?.getCommit) {
+            if (!getCommitAPI) {
               setError('getCommit function not available. Please restart the Electron app.')
               return
             }
             promises.push(
-              window.electronAPI.github.getCommit(repoFullName, baseSha!)
+              getCommitAPI(baseSha!)
                 .then(data => {
                   return { type: 'base', data }
                 })
@@ -83,12 +90,12 @@ export const CommitDetailsPanel: React.FC<CommitDetailsPanelProps> = ({
           }
 
           if (validHeadSha) {
-            if (!window.electronAPI?.github?.getCommit) {
+            if (!getCommitAPI) {
               setError('getCommit function not available. Please restart the Electron app.')
               return
             }
             promises.push(
-              window.electronAPI.github.getCommit(repoFullName, headSha!)
+              getCommitAPI(headSha!)
                 .then(data => {
                   return { type: 'head', data }
                 })

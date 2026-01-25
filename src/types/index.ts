@@ -6,6 +6,8 @@ export interface Repo {
   name: string
   fullName: string
   defaultBranch: string
+  type: 'github' | 'local'
+  localPath?: string // Only for local repos
 }
 
 export interface GitRef {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Folder, X } from 'lucide-react'
+import { X, Globe, HardDrive } from 'lucide-react'
 import './RepoSearchModal.css'
 
 interface RepoSearchModalProps {
@@ -36,7 +36,12 @@ export const RepoSearchModal: React.FC<RepoSearchModalProps> = ({
     ? filteredRepos
     : [
         ...recentRepos,
-        ...filteredRepos.filter(r => !recentRepos.some(rr => rr.fullName === r.fullName))
+        ...filteredRepos.filter(r => 
+          !recentRepos.some(rr => 
+            (r.type === 'local' && rr.type === 'local' && r.localPath === rr.localPath) ||
+            (r.type !== 'local' && rr.type !== 'local' && r.fullName === rr.fullName)
+          )
+        )
       ]
 
   useEffect(() => {
@@ -124,15 +129,23 @@ export const RepoSearchModal: React.FC<RepoSearchModalProps> = ({
             </div>
           ) : (
             displayRepos.map((repo, index) => {
-              const isRecent = recentRepos.some(r => r.fullName === repo.fullName) && !searchQuery
+              const isRecent = recentRepos.some(r => 
+                (r.type === 'local' && repo.type === 'local' && r.localPath === repo.localPath) ||
+                (r.type !== 'local' && repo.type !== 'local' && r.fullName === repo.fullName)
+              ) && !searchQuery
+              const repoType = repo.type || (repo.localPath ? 'local' : 'github')
               return (
                 <div
-                  key={repo.id || repo.fullName}
+                  key={repo.id || repo.fullName || repo.localPath}
                   className={`repo-item ${index === selectedIndex ? 'selected' : ''} ${isRecent ? 'recent' : ''}`}
                   onClick={() => onSelect(repo)}
                   onMouseEnter={() => setSelectedIndex(index)}
                 >
-                  <Folder size={18} className="repo-item-icon" />
+                  {repoType === 'local' ? (
+                    <HardDrive size={18} className="repo-item-icon" />
+                  ) : (
+                    <Globe size={18} className="repo-item-icon" />
+                  )}
                   <div className="repo-item-details">
                     <div className="repo-item-name">{repo.fullName}</div>
                     <div className="repo-item-path">{repo.owner}/{repo.name}</div>

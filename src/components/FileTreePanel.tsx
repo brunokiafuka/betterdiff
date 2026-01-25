@@ -22,10 +22,9 @@ export const FileTreePanel: React.FC = () => {
     const loadFileTree = async () => {
       setLoading(true)
       try {
-        const tree = await window.electronAPI.github.getRepoTree(
-          currentRepo.fullName,
-          baseRef.sha
-        )
+        const tree = currentRepo.type === 'local'
+          ? await window.electronAPI.local.getRepoTree(currentRepo.localPath!, baseRef.name)
+          : await window.electronAPI.github.getRepoTree(currentRepo.fullName, baseRef.sha)
         setFileTree(buildTreeStructure(tree))
       } catch (error) {
         console.error('Failed to load file tree:', error)

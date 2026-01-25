@@ -33,6 +33,24 @@ contextBridge.exposeInMainWorld('electronAPI', {
     read: () => ipcRenderer.invoke('config:read'),
     write: (config: any) => ipcRenderer.invoke('config:write', config),
     exists: () => ipcRenderer.invoke('config:exists'),
+  },
+  
+  // Local repositories
+  local: {
+    selectFolder: () => ipcRenderer.invoke('local:selectFolder'),
+    listBranches: (repoPath: string) => ipcRenderer.invoke('local:listBranches', repoPath),
+    compareRefs: (repoPath: string, base: string, head: string) =>
+      ipcRenderer.invoke('local:compareRefs', repoPath, base, head),
+    getFileContent: (repoPath: string, ref: string, path: string) =>
+      ipcRenderer.invoke('local:getFileContent', repoPath, ref, path),
+    getRepoTree: (repoPath: string, ref: string) =>
+      ipcRenderer.invoke('local:getRepoTree', repoPath, ref),
+    getFileHistory: (repoPath: string, path: string, ref: string) =>
+      ipcRenderer.invoke('local:getFileHistory', repoPath, path, ref),
+    getCommit: (repoPath: string, sha: string) =>
+      ipcRenderer.invoke('local:getCommit', repoPath, sha),
+    getBlame: (repoPath: string, ref: string, path: string) =>
+      ipcRenderer.invoke('local:getBlame', repoPath, ref, path),
   }
 })
 
@@ -58,6 +76,16 @@ declare global {
         read: () => Promise<any>
         write: (config: any) => Promise<{ success: boolean }>
         exists: () => Promise<boolean>
+      }
+      local: {
+        selectFolder: () => Promise<any>
+        listBranches: (repoPath: string) => Promise<any[]>
+        compareRefs: (repoPath: string, base: string, head: string) => Promise<any>
+        getFileContent: (repoPath: string, ref: string, path: string) => Promise<string>
+        getRepoTree: (repoPath: string, ref: string) => Promise<any[]>
+        getFileHistory: (repoPath: string, path: string, ref: string) => Promise<any[]>
+        getCommit: (repoPath: string, sha: string) => Promise<any>
+        getBlame: (repoPath: string, ref: string, path: string) => Promise<any[]>
       }
     }
   }

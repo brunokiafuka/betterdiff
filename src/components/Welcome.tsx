@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAppStore } from '../stores/appStore'
 import { RepoSearchModal } from './RepoSearchModal'
-import { Settings, FolderOpen, Search, Folder } from 'lucide-react'
+import { Settings, FolderOpen, HardDrive, Globe } from 'lucide-react'
 import './Welcome.css'
 
 export const Welcome: React.FC = () => {
@@ -43,7 +43,13 @@ export const Welcome: React.FC = () => {
   const loadRecentRepos = async () => {
     try {
       const config = await window.electronAPI.config.read()
-      const recent = config?.recentRepos || []
+      const recent = (config?.recentRepos || []).map((r: any) => {
+        // Ensure type is set for backward compatibility
+        if (!r.type) {
+          r.type = r.localPath ? 'local' : 'github'
+        }
+        return r
+      })
       setRecentRepos(recent.slice(0, 5)) // Last 5
     } catch (err) {
       console.error('Failed to load recent repos:', err)
@@ -64,19 +70,33 @@ export const Welcome: React.FC = () => {
     }
   }
 
-  const handleSelectRepo = async (repo: any) => {
-    setShowModal(false) // Close modal when repo is selected
+  const handleSelectLocalRepo = async () => {
     setLoading(true)
     setError(null)
     try {
+      const repo = await window.electronAPI.local.selectFolder()
+      if (!repo) {
+        setLoading(false)
+        return
+      }
+
+      // Ensure repo has type
+      if (!repo.type) {
+        repo.type = 'local'
+      }
+
       setRepo(repo)
 
       // Update recent repos in config
       try {
         const config = await window.electronAPI.config.read() || {}
         const recent = config.recentRepos || []
-        // Remove if already exists
-        const filtered = recent.filter((r: any) => r.fullName !== repo.fullName)
+        // Remove if already exists (check by id or localPath for local repos)
+        const filtered = recent.filter((r: any) =>
+          r.type === 'local'
+            ? r.localPath !== repo.localPath
+            : r.fullName !== repo.fullName
+        )
         // Add to front
         const updated = [{ ...repo, lastAccessed: new Date().toISOString() }, ...filtered].slice(0, 10)
         await window.electronAPI.config.write({ ...config, recentRepos: updated })
@@ -86,10 +106,73 @@ export const Welcome: React.FC = () => {
       }
 
       // Fetch branches and set default ref
-      const branches = await window.electronAPI.github.listBranches(repo.fullName)
+      const branches = await window.electronAPI.local.listBranches(repo.localPath!)
       if (branches.length > 0) {
-        const defaultBranch = branches.find(b => b.name === repo.defaultBranch) || branches[0]
+        const defaultBranch = branches.find((b: any) => b.name === repo.defaultBranch) || branches[0]
         setRefs(defaultBranch, defaultBranch)
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to select local repository')
+      console.error('Failed to select local repo:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSelectRepo = async (repo: any) => {
+    setShowModal(false) // Close modal when repo is selected
+    setLoading(true)
+    setError(null)
+    try {
+      // Ensure repo has type - detect local repos by checking for localPath
+      if (!repo.type) {
+        repo.type = repo.localPath ? 'local' : 'github'
+      }
+
+      console.log('Selecting repo:', { type: repo.type, localPath: repo.localPath, fullName: repo.fullName })
+      setRepo(repo)
+
+      // Update recent repos in config
+      try {
+        const config = await window.electronAPI.config.read() || {}
+        const recent = config.recentRepos || []
+        // Remove if already exists
+        const filtered = recent.filter((r: any) =>
+          r.type === 'local'
+            ? r.localPath !== repo.localPath
+            : r.fullName !== repo.fullName
+        )
+        // Add to front
+        const updated = [{ ...repo, lastAccessed: new Date().toISOString() }, ...filtered].slice(0, 10)
+        await window.electronAPI.config.write({ ...config, recentRepos: updated })
+        setRecentRepos(updated.slice(0, 5))
+      } catch (err) {
+        console.error('Failed to update recent repos:', err)
+      }
+
+      // Fetch branches and set default ref
+      if (repo.type === 'local' && repo.localPath) {
+        try {
+          const branches = await window.electronAPI.local.listBranches(repo.localPath)
+          console.log('Local branches fetched:', branches)
+          if (branches.length > 0) {
+            const defaultBranch = branches.find((b: any) => b.name === repo.defaultBranch) || branches[0]
+            console.log('Setting refs to:', defaultBranch)
+            setRefs(defaultBranch, defaultBranch)
+          } else {
+            console.warn('No branches found for local repo:', repo.localPath)
+            setError('No branches found in repository')
+          }
+        } catch (branchError: any) {
+          console.error('Failed to fetch branches for local repo:', branchError)
+          setError(`Failed to load branches: ${branchError.message}`)
+        }
+      } else {
+        const branches = await window.electronAPI.github.listBranches(repo.fullName)
+        if (branches.length > 0) {
+          const defaultBranch = branches.find((b: any) => b.name === repo.defaultBranch) || branches[0]
+          setRefs(defaultBranch, defaultBranch)
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Failed to select repository')
@@ -148,7 +231,15 @@ export const Welcome: React.FC = () => {
                 disabled={loading || repos.length === 0}
               >
                 <FolderOpen size={16} />
-                <span>Open Repository</span>
+                <span>Open GitHub Repository</span>
+              </button>
+              <button
+                className="welcome-action-btn"
+                onClick={handleSelectLocalRepo}
+                disabled={loading}
+              >
+                <HardDrive size={16} />
+                <span>Open Local Repository</span>
               </button>
             </div>
 
@@ -182,8 +273,15 @@ export const Welcome: React.FC = () => {
                       className="recent-repo-item"
                       onClick={() => handleSelectRepo(repo)}
                     >
-                      <span className="repo-item-name">{repo.fullName}</span>
-                      <span className="repo-item-path">{repo.owner}/{repo.name}</span>
+                      {repo.type === 'local' ? (
+                        <HardDrive size={18} className="repo-item-icon" />
+                      ) : (
+                        <Globe size={18} className="repo-item-icon" />
+                      )}
+                      <div className="repo-item-content">
+                        <span className="repo-item-name">{repo.fullName}</span>
+                        <span className="repo-item-path">{repo.owner}/{repo.name}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -206,8 +304,11 @@ export const Welcome: React.FC = () => {
                       className="recent-repo-item"
                       onClick={() => handleSelectRepo(repo)}
                     >
-                      <span className="repo-item-name">{repo.fullName}</span>
-                      <span className="repo-item-path">{repo.owner}/{repo.name}</span>
+                      <Globe size={18} className="repo-item-icon" />
+                      <div className="repo-item-content">
+                        <span className="repo-item-name">{repo.fullName}</span>
+                        <span className="repo-item-path">{repo.owner}/{repo.name}</span>
+                      </div>
                     </div>
                   ))}
                 </div>

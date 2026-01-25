@@ -25,18 +25,20 @@ export const DiffView: React.FC = () => {
         // Check if this is a "same commit" comparison (no actual diff)
         if (baseRef.sha === headRef.sha) {
           // Same commit - load content only once
-          const content = await window.electronAPI.github.getFileContent(
-            repo.fullName,
-            baseRef.sha,
-            filePath
-          )
+          const content = repo.type === 'local'
+            ? await window.electronAPI.local.getFileContent(repo.localPath!, baseRef.name, filePath)
+            : await window.electronAPI.github.getFileContent(repo.fullName, baseRef.sha, filePath)
           setOldContent(content)
           setNewContent(content)
         } else {
           // Different commits - fetch both versions
           const [oldData, newData] = await Promise.all([
-            window.electronAPI.github.getFileContent(repo.fullName, baseRef.sha, filePath),
-            window.electronAPI.github.getFileContent(repo.fullName, headRef.sha, filePath)
+            repo.type === 'local'
+              ? window.electronAPI.local.getFileContent(repo.localPath!, baseRef.name, filePath)
+              : window.electronAPI.github.getFileContent(repo.fullName, baseRef.sha, filePath),
+            repo.type === 'local'
+              ? window.electronAPI.local.getFileContent(repo.localPath!, headRef.name, filePath)
+              : window.electronAPI.github.getFileContent(repo.fullName, headRef.sha, filePath)
           ])
           setOldContent(oldData)
           setNewContent(newData)
