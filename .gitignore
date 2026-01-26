@@ -8,3 +8,6 @@ release/
 .env.local
 *.sqlite
 *.db
+
+# pnpm
+pnpm-lock.yaml
