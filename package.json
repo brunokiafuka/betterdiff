@@ -8,9 +8,11 @@
     "build:desktop": "pnpm --filter desktop build",
     "preview:desktop": "pnpm --filter desktop preview"
   },
-  "devDependencies": {},
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
+  },
+  "dependencies": {
+    "jose": "^6.1.3"
   }
 }
