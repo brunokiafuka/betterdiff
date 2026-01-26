@@ -36,6 +36,28 @@
   gap: var(--space-md);
 }
 
+.app-logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: all var(--transition-base);
+  flex-shrink: 0;
+}
+
+.app-logo code {
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  letter-spacing: 0.5px;
+  text-transform: lowercase;
+}
+
+.app-logo:hover code {
+  color: var(--text-primary);
+}
+
 .top-bar-right {
   display: flex;
   align-items: center;

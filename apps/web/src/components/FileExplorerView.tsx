@@ -27,6 +27,7 @@ export const FileExplorerView: React.FC<FileExplorerViewProps> = ({
   const [selectedCommits, setSelectedCommits] = useState<{ base: string; head: string } | null>(
     initialBaseSha && initialHeadSha ? { base: initialBaseSha, head: initialHeadSha } : null
   )
+  const [showDetailsPanel, setShowDetailsPanel] = useState(false)
 
   // Update URL when file path or commits change
   useEffect(() => {
@@ -133,6 +134,7 @@ export const FileExplorerView: React.FC<FileExplorerViewProps> = ({
                 headSha={selectedCommits?.head || null}
                 repoFullName={repo.fullName}
                 repo={repo}
+                onDetailsClick={() => setShowDetailsPanel(true)}
               />
             </div>
 

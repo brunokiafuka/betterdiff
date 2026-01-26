@@ -121,14 +121,14 @@ export const FileDiffViewer: React.FC<FileDiffViewerProps> = ({
         <div className="diff-file-path">
           {filePath}
         </div>
-        {baseSha && headSha && onDetailsClick && (
+        {onDetailsClick && (
           <button
             className="diff-details-btn"
             onClick={onDetailsClick}
             title="View commit details"
+            disabled={!baseSha || !headSha}
           >
             <Info size={16} />
-            <span>Details</span>
           </button>
         )}
       </div>

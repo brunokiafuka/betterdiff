@@ -14,6 +14,18 @@ export const Settings: React.FC = () => {
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const handleClose = () => {
+    // Check if there's browser history to go back to
+    // window.history.length > 1 means there's at least one previous page
+    if (window.history.length > 1 && document.referrer) {
+      // Go back to previous page
+      window.history.back()
+    } else {
+      // No history or direct access, navigate to repos
+      navigate({ to: '/repos' })
+    }
+  }
+
   const handleDeleteAccount = async () => {
     if (confirmText !== 'DELETE') {
       setError('Please type DELETE to confirm')
@@ -39,7 +51,7 @@ export const Settings: React.FC = () => {
       <div className="settings-content">
         <div className="settings-header">
           <h1>Settings</h1>
-          <button className="btn-close" onClick={() => navigate({ to: '/repos' })} title="Close">
+          <button className="btn-close" onClick={handleClose} title="Close">
             <X size={20} />
           </button>
         </div>

@@ -45,24 +45,28 @@
 .diff-details-btn {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
+  justify-content: center;
+  padding: var(--space-sm);
   background: var(--bg-elevated);
   border: var(--border-width) solid var(--border-default);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
-  font-size: 13px;
-  font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-base);
   flex-shrink: 0;
-  font-family: var(--font-sans);
+  width: 32px;
+  height: 32px;
 }
 
-.diff-details-btn:hover {
+.diff-details-btn:hover:not(:disabled) {
   background: var(--bg-hover);
   border-color: var(--border-strong);
   box-shadow: var(--shadow-sm);
+}
+
+.diff-details-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .diff-details-btn svg {

@@ -29,8 +29,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const { signOut } = useAuthActions()
 
 
-  const isReposPage = location.pathname === '/repos'
   const isAuthPage = location.pathname === '/'
+  const isRepoViewerPage = location.pathname.startsWith('/repo/')
 
   useEffect(() => {
     if (showModal && repos.length === 0) {
@@ -126,7 +126,10 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       {!isAuthPage && (
         <div className="top-bar">
           <div className="top-bar-left">
-            {!isReposPage && (
+            <Link to="/repos" className="app-logo" title="betterdiff">
+              <code>betterdiff</code>
+            </Link>
+            {isRepoViewerPage && (
               <>
                 <Link to="/repos" className="btn-repos" title="Back to Repositories">
                   <FolderOpen size={18} />
@@ -155,7 +158,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
           </div>
 
           <div className="top-bar-right">
-            {repo && (
+            {isRepoViewerPage && repo && (
               <>
                 <button
                   className="btn-action btn-icon"
