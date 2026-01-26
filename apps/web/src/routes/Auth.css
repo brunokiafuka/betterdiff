@@ -89,11 +89,9 @@
 /* Auth Card */
 .auth-card {
   background: var(--bg-secondary);
-  border-radius: var(--radius-xl);
   border: var(--border-width) solid var(--border-default);
   padding: var(--space-2xl);
-  backdrop-filter: blur(20px) saturate(180%);
-  box-shadow: var(--shadow-xl);
+  transition: border-color var(--transition-base);
 }
 
 .auth-card-header {
@@ -243,30 +241,21 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-md);
-  padding: var(--space-lg) var(--space-xl);
-  background: #24292e;
-  border: var(--border-width) solid #24292e;
-  border-radius: var(--radius-md);
-  color: #ffffff;
-  font-size: 15px;
+  padding: var(--space-lg) var(--space-2xl);
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: all var(--transition-base);
+  transition: opacity var(--transition-base);
   font-family: var(--font-sans);
   width: 100%;
   margin-top: var(--space-xl);
+  border: none;
 }
 
 .btn-github-signin:hover {
-  background: #2f363d;
-  border-color: #2f363d;
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
-}
-
-.btn-github-signin:active {
-  transform: translateY(0);
-  background: #1f2328;
+  opacity: 0.9;
 }
 
 .btn-github-signin svg {

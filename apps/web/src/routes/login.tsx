@@ -11,7 +11,8 @@ function AuthenticatedRedirect() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    navigate({ to: '/repos' })
+    // Use replace to avoid adding to history
+    navigate({ to: '/repos', replace: true })
   }, [navigate])
 
   return null
@@ -21,6 +22,8 @@ export function LoginRoute() {
   const { signIn } = useAuthActions()
 
   const handleSignIn = () => {
+    // Store the intended destination before redirecting
+    sessionStorage.setItem('authRedirect', '/repos')
     void signIn('github')
   }
 
