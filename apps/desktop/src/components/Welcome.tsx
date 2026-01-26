@@ -151,7 +151,6 @@ export const Welcome: React.FC = () => {
         repo.type = repo.localPath ? 'local' : 'github'
       }
 
-      console.log('Selecting repo:', { type: repo.type, localPath: repo.localPath, fullName: repo.fullName })
       setRepo(repo)
 
       // Update recent repos in config
@@ -176,10 +175,8 @@ export const Welcome: React.FC = () => {
       if (repo.type === 'local' && repo.localPath) {
         try {
           const branches = await window.electronAPI.local.listBranches(repo.localPath)
-          console.log('Local branches fetched:', branches)
           if (branches.length > 0) {
             const defaultBranch = branches.find((b: any) => b.name === repo.defaultBranch) || branches[0]
-            console.log('Setting refs to:', defaultBranch)
             setRefs(defaultBranch, defaultBranch)
           } else {
             console.warn('No branches found for local repo:', repo.localPath)

@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import {  query, action, mutation } from "./_generated/server";
+import { query, action, mutation } from "./_generated/server";
 import { Octokit } from "@octokit/rest";
 import GitHub from "@auth/core/providers/github";
 import { convexAuth } from "@convex-dev/auth/server";
@@ -33,10 +33,12 @@ export const getCurrentUsername = query({
   args: {},
   handler: async (ctx) => {
     const authUserIdentity = await ctx.auth.getUserIdentity();
-    const userId = authUserIdentity?.subject.split('|')[0];
-    
+    const userId = authUserIdentity?.subject.split("|")[0];
 
-    const user = await ctx.db.query("users").withIndex("by_id", (q) => q.eq("_id", userId as Id<"users">)).first();
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_id", (q) => q.eq("_id", userId as Id<"users">))
+      .first();
 
     return user?.username || null;
   },
@@ -49,9 +51,12 @@ export const getCurrentUser = query({
     if (!authUserIdentity) {
       return null;
     }
-    
-    const userId = authUserIdentity.subject.split('|')[0];
-    const user = await ctx.db.query("users").withIndex("by_id", (q) => q.eq("_id", userId as Id<"users">)).first();
+
+    const userId = authUserIdentity.subject.split("|")[0];
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_id", (q) => q.eq("_id", userId as Id<"users">))
+      .first();
 
     if (!user) {
       return null;
@@ -68,15 +73,14 @@ export const getCurrentUser = query({
 export const getToken = query({
   args: { username: v.string() },
   handler: async (ctx, args) => {
-    
-    const user = await ctx.db.query("users").withIndex("by_username", (q) => q.eq("username", args.username)).first();
-    console.log('user', user)
-    
-  
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", args.username))
+      .first();
+
     return user?.token || null;
   },
 });
-
 
 // Validate token (action - can make HTTP requests)
 export const validateToken = action({
@@ -91,7 +95,6 @@ export const validateToken = action({
     }
   },
 });
-
 
 export const authenticate = action({
   args: { token: v.string() },
@@ -115,17 +118,20 @@ export const deleteAccount = mutation({
     }
 
     // Extract user ID from subject (format: "provider|id")
-    const userId = authUserIdentity.subject.split('|')[0] as Id<"users">;
-    
+    const userId = authUserIdentity.subject.split("|")[0] as Id<"users">;
+
     // Query the user to ensure they exist
-    const user = await ctx.db.query("users").withIndex("by_id", (q) => q.eq("_id", userId)).first();
-    
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_id", (q) => q.eq("_id", userId))
+      .first();
+
     if (!user) {
       throw new Error("User not found");
     }
-    
+
     await ctx.db.delete(userId);
-    
+
     return { success: true };
   },
 });

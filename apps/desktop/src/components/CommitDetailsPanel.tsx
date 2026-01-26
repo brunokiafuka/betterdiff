@@ -49,13 +49,11 @@ export const CommitDetailsPanel: React.FC<CommitDetailsPanelProps> = ({
 
         if (isSameCommit) {
           // Same commit - load once and set both
-          console.log('Loading same commit:', baseSha)
           try {
             if (!getCommitAPI) {
               throw new Error('getCommit function not available. Please restart the Electron app.')
             }
             const commitData = await getCommitAPI(baseSha!)
-            console.log('Loaded commit data:', commitData)
             if (commitData) {
               setBaseCommit(commitData)
               setHeadCommit(commitData)
