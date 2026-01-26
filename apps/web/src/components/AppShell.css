@@ -33,7 +33,7 @@
 .top-bar-left {
   display: flex;
   align-items: center;
-  gap: var(--space-lg);
+  gap: var(--space-md);
 }
 
 .top-bar-right {
@@ -68,6 +68,36 @@
   background: var(--bg-hover);
   border-color: var(--border-strong);
   box-shadow: var(--shadow-sm);
+}
+
+.btn-repos {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  line-height: 1.4;
+  transition: all var(--transition-base);
+  font-family: var(--font-sans);
+  text-decoration: none;
+}
+
+.btn-repos:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-repos svg {
+  flex-shrink: 0;
+  stroke-width: 2;
 }
 
 .btn-select-repo {

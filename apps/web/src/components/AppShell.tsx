@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useSignals } from '@preact/signals-react/runtime'
-import { Settings, Sparkles, Flame, LogOut } from 'lucide-react'
+import { Settings, Sparkles, Flame, LogOut, FolderOpen } from 'lucide-react'
 import { useNavigate, Link, useLocation } from '@tanstack/react-router'
 import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
@@ -127,26 +127,30 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         <div className="top-bar">
           <div className="top-bar-left">
             {!isReposPage && (
-              <div className="repo-selector">
-                {repo ? (
-                  <>
-                    <button
-                      className="repo-name-btn"
-                      onClick={handleRepoNameClick}
-                      title="Click to change repository"
-                    >
-                      {repo.fullName}
-                    </button>
-                    <BranchSelector />
-                  </>
-                ) : (
-
-                  <Link to="/repos" className="btn-select-repo">
-                    Select Repository
-                  </Link>
-
-                )}
-              </div>
+              <>
+                <Link to="/repos" className="btn-repos" title="Back to Repositories">
+                  <FolderOpen size={18} />
+                  <span>Repos</span>
+                </Link>
+                <div className="repo-selector">
+                  {repo ? (
+                    <>
+                      <button
+                        className="repo-name-btn"
+                        onClick={handleRepoNameClick}
+                        title="Click to change repository"
+                      >
+                        {repo.fullName}
+                      </button>
+                      <BranchSelector />
+                    </>
+                  ) : (
+                    <Link to="/repos" className="btn-select-repo">
+                      Select Repository
+                    </Link>
+                  )}
+                </div>
+              </>
             )}
           </div>
 
