@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { FileExplorerView } from '../components/FileExplorerView'
 import { setRepo } from '../stores/appStore'
 import { useGetRepo } from '../services/github'
+import { ProtectedRoute } from '../components/ProtectedRoute'
 import type { Repo } from '../types'
 
 export function RepoViewerRoute() {
@@ -64,10 +65,12 @@ export function RepoViewerRoute() {
   }
 
   return (
-    <FileExplorerView
-      initialPath={search?.path}
-      initialBaseSha={search?.oldcommit}
-      initialHeadSha={search?.newcommit}
-    />
+    <ProtectedRoute>
+      <FileExplorerView
+        initialPath={search?.path}
+        initialBaseSha={search?.oldcommit}
+        initialHeadSha={search?.newcommit}
+      />
+    </ProtectedRoute>
   )
 }

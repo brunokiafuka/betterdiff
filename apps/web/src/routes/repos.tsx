@@ -1,5 +1,10 @@
 import { Welcome } from '../components/Welcome'
+import { ProtectedRoute } from '../components/ProtectedRoute'
 
 export function ReposRoute() {
-  return <Welcome />
+  return (
+    <ProtectedRoute>
+      <Welcome />
+    </ProtectedRoute>
+  )
 }
