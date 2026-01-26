@@ -1,0 +1,87 @@
+.file-explorer-view {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  background: var(--bg-primary);
+  position: relative;
+}
+
+.file-explorer-left {
+  flex-shrink: 0;
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.file-explorer-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-left: var(--border-width) solid var(--border-subtle);
+  min-width: 0;
+}
+
+.file-explorer-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.file-explorer-history {
+  flex-shrink: 0;
+  max-height: 280px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.file-explorer-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-primary);
+  min-height: 0;
+}
+
+.empty-state {
+  text-align: center;
+  max-width: 400px;
+  padding: var(--space-3xl);
+}
+
+.empty-icon {
+  color: var(--text-tertiary);
+  margin: 0 auto var(--space-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+}
+
+.empty-icon svg {
+  width: 48px;
+  height: 48px;
+  stroke-width: 1.5;
+}
+
+.empty-state h3 {
+  margin: 0 0 var(--space-md) 0;
+  font-size: 18px;
+  color: var(--text-primary);
+  font-weight: 600;
+  letter-spacing: -0.3px;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-tertiary);
+  line-height: 1.6;
+}
