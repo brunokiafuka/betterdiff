@@ -3,7 +3,9 @@ import { useNavigate } from '@tanstack/react-router'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { Authenticated, Unauthenticated, AuthLoading } from 'convex/react'
 import { Github } from 'lucide-react'
+import iconImage from '../assets/icon.png'
 import './Auth.css'
+import { Footer } from '../components/Footer'
 
 function AuthenticatedRedirect() {
   const navigate = useNavigate()
@@ -32,11 +34,11 @@ export function IndexRoute() {
           <div className="auth-container">
             <div className="auth-header">
               <div className="auth-logo">
-                <Github size={40} />
+                <img src={iconImage} alt="betterdiff" className="auth-logo-img" />
               </div>
-              <h1 className="auth-title">Welcome to WhoDidIt</h1>
+              <h1 className="auth-title"><code>betterdiff</code></h1>
               <p className="auth-subtitle">
-                Forensic diff viewer for Git repositories
+                Uncover the story behind your code. Next-gen Git diffs, redefined.
               </p>
             </div>
 
@@ -59,10 +61,12 @@ export function IndexRoute() {
 
             <div className="auth-footer">
               <p>
-                By signing in, you agree to grant WhoDidIt access to your repositories
+                By signing in, you agree to grant betterdiff access to your repositories
               </p>
             </div>
+            <Footer />
           </div>
+
         </div>
       </Unauthenticated>
       <AuthLoading>

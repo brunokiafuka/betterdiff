@@ -4,6 +4,7 @@ import { Search, Globe, X, GitBranch, Loader2 } from 'lucide-react'
 import { setRepo } from '../stores/appStore'
 import { useFetchRepos } from '../services/github'
 import './Welcome.css'
+import { Footer } from './Footer'
 
 const REPOS_PER_PAGE = 12
 
@@ -286,10 +287,8 @@ export const Welcome: React.FC = () => {
           )}
         </div>
 
-        {/* Footer */}
-        <div className="repos-footer">
-          <span className="footer-text">whodidit::v0.1.0</span>
-        </div>
+
+        <Footer />
       </div>
     </div>
   )
