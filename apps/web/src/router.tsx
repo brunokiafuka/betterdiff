@@ -1,6 +1,7 @@
 import { createRouter, createRootRoute, createRoute } from '@tanstack/react-router'
 import { RootLayout } from './routes/__root'
 import { IndexRoute } from './routes/index'
+import { LoginRoute } from './routes/login'
 import { SettingsRoute } from './routes/settings'
 import { ReposRoute } from './routes/repos'
 import { RepoViewerRoute } from './routes/repo.$owner.$name'
@@ -10,11 +11,18 @@ const rootRoute = createRootRoute({
   component: RootLayout,
 })
 
-// Create index route
+// Create index route (landing page)
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
   component: IndexRoute,
+})
+
+// Create login route
+const loginRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/login',
+  component: LoginRoute,
 })
 
 // Create settings route
@@ -48,6 +56,7 @@ const repoViewerRoute = createRoute({
 // Create the route tree
 const routeTree = rootRoute.addChildren([
   indexRoute,
+  loginRoute,
   settingsRoute,
   reposRoute,
   repoViewerRoute,

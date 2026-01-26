@@ -1,82 +1,188 @@
 import { useEffect } from 'react'
-import { useNavigate } from '@tanstack/react-router'
-import { useAuthActions } from '@convex-dev/auth/react'
-import { Authenticated, Unauthenticated, AuthLoading } from 'convex/react'
-import { Github } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { GitBranch, GitCommit, FileCode, Github, ArrowRight } from 'lucide-react'
 import iconImage from '../assets/icon.png'
-import './Auth.css'
+import './Landing.css'
 import { Footer } from '../components/Footer'
-
-function AuthenticatedRedirect() {
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    navigate({ to: '/repos' })
-  }, [navigate])
-
-  return null
-}
+import { FlickeringGrid } from '../components/FlickeringGrid'
 
 export function IndexRoute() {
-  const { signIn } = useAuthActions()
+  useEffect(() => {
+    // Enable scrolling for landing page
+    const root = document.getElementById('root')
+    if (root) {
+      root.style.overflow = 'auto'
+      root.style.height = 'auto'
+      root.style.minHeight = '100vh'
+    }
+    document.body.style.overflow = 'auto'
+    document.documentElement.style.overflow = 'auto'
 
-  const handleSignIn = () => {
-    void signIn('github')
-  }
+    return () => {
+      // Restore overflow hidden when leaving landing page
+      if (root) {
+        root.style.overflow = 'hidden'
+        root.style.height = '100vh'
+        root.style.minHeight = ''
+      }
+      document.body.style.overflow = 'hidden'
+      document.documentElement.style.overflow = 'hidden'
+    }
+  }, [])
 
   return (
-    <>
-      <Authenticated>
-        <AuthenticatedRedirect />
-      </Authenticated>
-      <Unauthenticated>
-        <div className="auth-page">
-          <div className="auth-container">
-            <div className="auth-header">
-              <div className="auth-logo">
-                <img src={iconImage} alt="betterdiff" className="auth-logo-img" />
-              </div>
-              <h1 className="auth-title"><code>betterdiff</code></h1>
-              <p className="auth-subtitle">
-                Uncover the story behind your code. Next-gen Git diffs, redefined.
-              </p>
-            </div>
-
-            <div className="auth-card">
-              <div className="auth-card-header">
-                <h2>Get Started</h2>
-                <p className="auth-card-description">
-                  Sign in with your GitHub account to access your repositories
-                </p>
-              </div>
-
-              <button
-                className="btn-github-signin"
-                onClick={handleSignIn}
-              >
-                <Github size={20} />
-                <span>Sign in with GitHub</span>
-              </button>
-            </div>
-
-            <div className="auth-footer">
-              <p>
-                By signing in, you agree to grant betterdiff access to your repositories
-              </p>
-            </div>
-            <Footer />
-          </div>
-
-        </div>
-      </Unauthenticated>
-      <AuthLoading>
-        <div className="auth-page">
-          <div className="auth-loading">
-            <div className="spinner"></div>
-            <p>Checking authentication...</p>
+    <div className="landing-page">
+      <FlickeringGrid
+        squareSize={4}
+        gridGap={6}
+        color="rgba(107, 114, 128, 0.5)"
+        maxOpacity={0.3}
+        flickerChance={0.1}
+        className="landing-grid-bg"
+      />
+      {/* Navigation */}
+      <nav className="landing-nav">
+        <div className="landing-nav-container">
+          <Link to="/" className="landing-nav-logo">
+            <img src={iconImage} alt="betterdiff" />
+            <code>betterdiff</code>
+          </Link>
+          <div className="landing-nav-links">
+            <a href="https://github.com/brunokiafuka/betterdiff" target="_blank" rel="noopener noreferrer" className="landing-nav-link">
+              <Github size={16} style={{ marginRight: 6 }} />
+              GitHub
+            </a>
+            <Link to="/login" className="landing-nav-cta">
+              Get Started
+            </Link>
           </div>
         </div>
-      </AuthLoading>
-    </>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="landing-hero">
+        <div className="landing-hero-content">
+          <div className="landing-badge">
+            <span className="landing-badge-dot"></span>
+            <span>Now in public beta</span>
+          </div>
+          <h1>
+            The modern way to<br />
+            <span>understand your code</span>
+          </h1>
+          <p className="landing-hero-subtitle">
+            Next-generation Git diffs that tell the story behind every change.
+            Visualize commits, track file history, and navigate your codebase like never before.
+          </p>
+          <div className="landing-hero-actions">
+            <Link to="/login" className="landing-btn-primary">
+              <Github size={20} />
+              Sign in with GitHub
+            </Link>
+            <a
+              href="https://github.com/brunokiafuka/betterdiff"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="landing-btn-secondary"
+            >
+              View on GitHub
+              <ArrowRight size={16} />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Demo Preview */}
+      <section className="landing-demo">
+        <div className="landing-demo-window">
+          <div className="landing-demo-header">
+            <span className="landing-demo-dot"></span>
+            <span className="landing-demo-dot"></span>
+            <span className="landing-demo-dot"></span>
+          </div>
+          <div className="landing-demo-content">
+            <div className="landing-demo-placeholder">
+              <FileCode size={64} strokeWidth={1} />
+              <span>Beautiful diff visualization coming soon</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="landing-features">
+        <div className="landing-section-header">
+          <p className="landing-section-label">Features</p>
+          <h2 className="landing-section-title">Everything you need to understand changes</h2>
+          <p className="landing-section-subtitle">
+            Powerful tools designed for developers who care about code quality and maintainability.
+          </p>
+        </div>
+        <div className="landing-features-grid">
+          <div className="landing-feature-card">
+            <div className="landing-feature-icon">
+              <GitBranch size={24} />
+            </div>
+            <h3 className="landing-feature-title">Branch Comparison</h3>
+            <p className="landing-feature-description">
+              Compare any two branches or commits side by side. See exactly what changed and why.
+            </p>
+          </div>
+          <div className="landing-feature-card">
+            <div className="landing-feature-icon">
+              <GitCommit size={24} />
+            </div>
+            <h3 className="landing-feature-title">Commit History</h3>
+            <p className="landing-feature-description">
+              Navigate through your project's history with a beautiful, intuitive timeline view.
+            </p>
+          </div>
+          <div className="landing-feature-card">
+            <div className="landing-feature-icon">
+              <FileCode size={24} />
+            </div>
+            <h3 className="landing-feature-title">File Explorer</h3>
+            <p className="landing-feature-description">
+              Browse your repository structure and see changes at a glance with visual indicators.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="landing-stats">
+        <div className="landing-stats-grid">
+          <div className="landing-stat">
+            <span className="landing-stat-value">∞</span>
+            <span className="landing-stat-label">Repositories Supported</span>
+          </div>
+          <div className="landing-stat">
+            <span className="landing-stat-value">0ms</span>
+            <span className="landing-stat-label">Learning Curve</span>
+          </div>
+          <div className="landing-stat">
+            <span className="landing-stat-value">100%</span>
+            <span className="landing-stat-label">Free to Use</span>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="landing-cta">
+        <div className="landing-cta-content">
+          <h2>Ready to see your code differently?</h2>
+          <p>
+            Join developers who are already using betterdiff to understand their codebases better.
+          </p>
+          <Link to="/login" className="landing-btn-primary">
+            <Github size={20} />
+            Get Started for Free
+          </Link>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <Footer />
+    </div>
   )
 }

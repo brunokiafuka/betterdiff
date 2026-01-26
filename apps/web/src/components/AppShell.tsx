@@ -29,7 +29,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const { signOut } = useAuthActions()
 
 
-  const isAuthPage = location.pathname === '/'
+  const isAuthPage = location.pathname === '/login'
   const isRepoViewerPage = location.pathname.startsWith('/repo/')
 
   useEffect(() => {
