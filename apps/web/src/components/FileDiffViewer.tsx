@@ -99,6 +99,7 @@ export const FileDiffViewer: React.FC<FileDiffViewerProps> = ({
       'md': 'markdown',
       'sh': 'shell',
       'bash': 'shell',
+      'mdx': 'markdown',
     }
     return langMap[ext || ''] || 'plaintext'
   }
