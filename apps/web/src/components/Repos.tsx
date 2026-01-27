@@ -6,6 +6,7 @@ import { useFetchRepos, useSearchRepos } from '../services/github'
 import './Repos.css'
 import { Footer } from './Footer'
 import { track } from '../services/analytics'
+import { HOTSPOT_CACHE_PREFIX } from './HotspotPanel'
 
 const REPOS_PER_PAGE = 13
 
@@ -54,6 +55,24 @@ export const Repos: React.FC = () => {
   useEffect(() => {
     loadRepos()
   }, [loadRepos])
+
+  // Clear hotspot cache when on repos page
+  useEffect(() => {
+    const clearHotspotCache = () => {
+      try {
+        const keys = Object.keys(localStorage)
+        keys.forEach(key => {
+          if (key.startsWith(HOTSPOT_CACHE_PREFIX)) {
+            localStorage.removeItem(key)
+          }
+        })
+      } catch (err) {
+        console.error('Failed to clear hotspot cache:', err)
+      }
+    }
+
+    clearHotspotCache()
+  }, [])
 
   // Track when repos view is visible and data has loaded
   useEffect(() => {
