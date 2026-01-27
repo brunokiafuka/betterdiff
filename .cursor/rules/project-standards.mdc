@@ -1,0 +1,64 @@
+---
+description: Core project standards and conventions
+alwaysApply: true
+---
+
+# Project Standards
+
+## Monorepo Structure
+
+This is a pnpm workspace monorepo with two main apps:
+
+- `apps/desktop/` - Electron desktop application
+- `apps/web/` - Web application with Convex backend
+
+## Package Management
+
+- Use `pnpm` for all package operations (never npm or yarn)
+- Use workspace filters: `pnpm --filter desktop <command>` or `pnpm --filter web <command>`
+- Install dependencies in the specific app's directory, not root
+
+## Code Organization
+
+### Directory Structure
+
+- `components/` - React components (colocate `.css` files)
+- `services/` - API/service layer abstractions
+- `stores/` - Zustand state management
+- `types/` - TypeScript type definitions
+- `utils/` - Helper functions and utilities
+
+### File Naming
+
+- Components: PascalCase (`AppShell.tsx`)
+- Services/Utils: camelCase (`github.ts`, `format.ts`)
+- CSS: Match component name (`AppShell.css`)
+
+## Import Conventions
+
+```typescript
+// ✅ GOOD - Grouped and ordered
+import React, { useState, useEffect } from "react";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { useAppStore } from "../stores/appStore";
+import "./Component.css";
+```
+
+## Error Handling
+
+Always handle errors explicitly:
+
+```typescript
+// ✅ GOOD
+try {
+  const result = await fetchData();
+  setData(result);
+} catch (err) {
+  console.error("Failed to fetch data:", err);
+  // Show user-friendly error or set error state
+}
+
+// ❌ BAD
+await fetchData(); // No error handling
+```

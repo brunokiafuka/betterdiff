@@ -1,0 +1,69 @@
+---
+description: Monorepo workspace conventions and app-specific patterns
+alwaysApply: true
+---
+
+# Monorepo Structure
+
+## Workspace Organization
+
+This is a pnpm workspace monorepo:
+
+```
+
+├── apps/
+│   ├── desktop/     # Electron desktop app
+│   └── web/         # Web app with Convex backend
+├── packages/        # Shared packages (future)
+└── scripts/         # Shared scripts
+```
+
+## App-Specific Patterns
+
+### Desktop App (`apps/desktop/`)
+
+- Electron main process: `electron/main.ts`
+- Preload script: `electron/preload.ts`
+- Uses IPC for communication between main and renderer
+- No direct Node.js access in renderer (security)
+
+### Web App (`apps/web/`)
+
+- Convex backend: `convex/` directory
+- Uses Convex actions/mutations/queries
+- React Router for routing
+- TanStack Router file-based routing
+
+## Shared Code
+
+- Currently no shared packages
+- Future: Extract shared types/utils to `packages/`
+- Each app has its own `package.json` and dependencies
+
+## Commands
+
+### Root Level
+
+```bash
+pnpm dev:desktop    # Run desktop app
+pnpm build:desktop  # Build desktop app
+```
+
+### App Level
+
+```bash
+cd apps/desktop && pnpm dev
+cd apps/web && pnpm dev
+```
+
+## Dependencies
+
+- Install app-specific deps in the app directory
+- Install shared deps at root only if needed by scripts
+- Use workspace protocol for internal packages (future)
+
+## File Paths
+
+- Use relative imports within apps
+- Use absolute imports only if configured in tsconfig
+- Import from `../` to go up directories, not `@/` aliases (unless configured)
