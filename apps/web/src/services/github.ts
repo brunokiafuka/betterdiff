@@ -1,8 +1,6 @@
 // GitHub service that calls Convex functions
-import {  useAction, useMutation } from "convex/react";
+import { useAction, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
-
-
 
 export const useValidateToken = () => {
   return useAction(api.auth.validateToken);
@@ -12,9 +10,12 @@ export const useDeleteAccount = () => {
   return useMutation(api.auth.deleteAccount);
 };
 
-
 export const useFetchRepos = () => {
   return useAction(api.github.fetchRepos);
+};
+
+export const useSearchRepos = () => {
+  return useAction(api.github.searchRepos);
 };
 
 export const useGetRepo = () => {
@@ -48,5 +49,3 @@ export const useGetCommit = () => {
 export const useGetBlame = () => {
   return useAction(api.github.getBlame);
 };
-
-

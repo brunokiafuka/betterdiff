@@ -328,16 +328,40 @@
   margin: 0;
 }
 
-/* Infinite Scroll Loader */
-.load-more-trigger {
+/* Load More Button */
+.load-more-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl) 0;
+}
+
+.load-more-button {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-md);
-  padding: var(--space-xl) 0;
-  color: var(--text-tertiary);
+  padding: var(--space-md) var(--space-xl);
+  background: var(--bg-elevated);
+  border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
   font-size: 13px;
   font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  font-family: var(--font-sans);
+}
+
+.load-more-button:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+}
+
+.load-more-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .load-more-spinner {

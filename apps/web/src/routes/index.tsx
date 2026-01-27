@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { Authenticated } from 'convex/react'
-import { GitBranch, GitCommit, FileCode, Github, ArrowRight } from 'lucide-react'
+import { GitBranch, GitCommit, FileCode, Github, } from 'lucide-react'
 import iconImage from '../assets/icon.png'
 import diffImage from '../assets/diff.png'
 import './Landing.css'

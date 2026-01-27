@@ -1,55 +1,69 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Search, Globe, X, GitBranch, Loader2 } from 'lucide-react'
+import { Search, Globe, X, GitBranch, Loader2, Lock } from 'lucide-react'
 import { setRepo } from '../stores/appStore'
-import { useFetchRepos } from '../services/github'
-import './Welcome.css'
+import { useFetchRepos, useSearchRepos } from '../services/github'
+import './Repos.css'
 import { Footer } from './Footer'
 import { track } from '../services/analytics'
 
-const REPOS_PER_PAGE = 12
+const REPOS_PER_PAGE = 13
 
-export const Welcome: React.FC = () => {
+export const Repos: React.FC = () => {
   const navigate = useNavigate()
   const fetchRepos = useFetchRepos()
+  const searchRepos = useSearchRepos()
   const searchInputRef = useRef<HTMLInputElement>(null)
-  const loadMoreRef = useRef<HTMLDivElement>(null)
-  const [repos, setRepos] = useState<any[]>([])
+  const [reposList, setReposList] = useState<{ repos: any[]; hasMore: boolean; currentPage: number }>({
+    repos: [],
+    hasMore: true,
+    currentPage: 1,
+  })
+  const [searchResults, setSearchResults] = useState<{ repos: any[]; hasMore: boolean; currentPage: number }>({
+    repos: [],
+    hasMore: false,
+    currentPage: 1,
+  })
   const [recentRepos, setRecentRepos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [loadingSearch, setLoadingSearch] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [visibleCount, setVisibleCount] = useState(REPOS_PER_PAGE)
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
 
-  // Fetch repos on mount
-  useEffect(() => {
-    const loadRepos = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const result = await fetchRepos({})
-        setRepos(result || [])
-      } catch (err: any) {
-        console.error('Failed to load repos:', err)
-        setError(err.message || 'Failed to load repositories')
-        setRepos([])
-      } finally {
-        setLoading(false)
-      }
+  const loadRepos = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const result = await fetchRepos({ page: 1, perPage: REPOS_PER_PAGE })
+      setReposList({
+        repos: result.repos || [],
+        hasMore: result.hasNext ?? false,
+        currentPage: 1,
+      })
+    } catch (err: any) {
+      console.error('Failed to load repos:', err)
+      setError(err.message || 'Failed to load repositories')
+      setReposList({ repos: [], hasMore: false, currentPage: 1 })
+    } finally {
+      setLoading(false)
     }
-
-    loadRepos()
   }, [fetchRepos])
+
+  useEffect(() => {
+    loadRepos()
+  }, [loadRepos])
 
   // Track when repos view is visible and data has loaded
   useEffect(() => {
     if (!loading) {
       track('repos_viewed', {
         surface: 'web',
-        has_repos: repos.length > 0,
+        has_repos: reposList.repos.length > 0,
       })
     }
-  }, [loading, repos.length])
+  }, [loading, reposList.repos.length])
 
   // Load recent repos from localStorage
   useEffect(() => {
@@ -86,7 +100,6 @@ export const Welcome: React.FC = () => {
 
       setRepo(repo)
 
-      // Update recent repos in localStorage
       try {
         const stored = localStorage.getItem('whodidit_recent_repos') || '[]'
         const recent = JSON.parse(stored)
@@ -98,8 +111,11 @@ export const Welcome: React.FC = () => {
         console.error('Failed to update recent repos:', err)
       }
 
-      // Navigate to repo viewer
-      navigate({ to: '/repo/$owner/$name', params: { owner: repo.owner, name: repo.name } })
+      navigate({
+        to: '/repo/$owner/$name',
+        params: { owner: repo.owner, name: repo.name },
+        search: { path: undefined, oldcommit: undefined, newcommit: undefined }
+      })
     } catch (err: any) {
       console.error('Failed to select repo:', err)
     }
@@ -117,58 +133,109 @@ export const Welcome: React.FC = () => {
     }
   }
 
-  // Filter repos based on search query
-  const filteredRepos = useMemo(() =>
-    repos.filter((repo) =>
-      repo.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      repo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      repo.owner.toLowerCase().includes(searchQuery.toLowerCase())
-    ),
-    [repos, searchQuery]
-  )
-
-  // Reset visible count when search query changes
+  // Debounce search query
   useEffect(() => {
-    setVisibleCount(REPOS_PER_PAGE)
-  }, [searchQuery])
-
-  // Get visible repos for infinite scroll
-  const visibleRepos = useMemo(() =>
-    filteredRepos.slice(0, visibleCount),
-    [filteredRepos, visibleCount]
-  )
-
-  const hasMore = visibleCount < filteredRepos.length
-
-  // Load more repos
-  const loadMore = useCallback(() => {
-    if (hasMore) {
-      setVisibleCount(prev => Math.min(prev + REPOS_PER_PAGE, filteredRepos.length))
-    }
-  }, [hasMore, filteredRepos.length])
-
-  // Infinite scroll with IntersectionObserver
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore) {
-          loadMore()
-        }
-      },
-      { threshold: 0.1, rootMargin: '100px' }
-    )
-
-    const currentRef = loadMoreRef.current
-    if (currentRef) {
-      observer.observe(currentRef)
-    }
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery)
+    }, 300) // 300ms debounce delay
 
     return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef)
+      clearTimeout(timer)
+    }
+  }, [searchQuery])
+
+  // Load search results when debounced query changes
+  const loadSearchResults = useCallback(async (query: string, page: number = 1) => {
+    if (!query.trim()) {
+      setSearchResults({ repos: [], hasMore: false, currentPage: 1 })
+      return
+    }
+
+    setLoadingSearch(true)
+    setError(null)
+    try {
+      const result = await searchRepos({
+        page,
+        perPage: REPOS_PER_PAGE,
+        query: query.trim()
+      })
+      if (page === 1) {
+        setSearchResults({
+          repos: result.repos || [],
+          hasMore: result.hasNext ?? false,
+          currentPage: 1,
+        })
+      } else {
+        setSearchResults(prev => ({
+          repos: [...prev.repos, ...(result.repos || [])],
+          hasMore: result.hasNext ?? false,
+          currentPage: page,
+        }))
+      }
+    } catch (err: any) {
+      console.error('Failed to search repos:', err)
+      setError(err.message || 'Failed to search repositories')
+      setSearchResults({ repos: [], hasMore: false, currentPage: 1 })
+    } finally {
+      setLoadingSearch(false)
+    }
+  }, [fetchRepos])
+
+  // Trigger search when debounced query changes
+  useEffect(() => {
+    if (debouncedSearchQuery) {
+      loadSearchResults(debouncedSearchQuery, 1)
+    } else {
+      setSearchResults({ repos: [], hasMore: false, currentPage: 1 })
+    }
+  }, [debouncedSearchQuery, loadSearchResults])
+
+  // Determine which repos to display
+  const displayedRepos = debouncedSearchQuery ? searchResults.repos : reposList.repos
+  const displayedHasMore = debouncedSearchQuery ? searchResults.hasMore : reposList.hasMore
+  const displayedCurrentPage = debouncedSearchQuery ? searchResults.currentPage : reposList.currentPage
+  const isSearching = debouncedSearchQuery.length > 0
+
+  // Load more repos from API
+  const loadMore = useCallback(async () => {
+    if (loadingMore || loadingSearch || !displayedHasMore) {
+      return
+    }
+
+    if (isSearching) {
+      setLoadingSearch(true)
+      try {
+        const nextPage = displayedCurrentPage + 1
+        await loadSearchResults(debouncedSearchQuery, nextPage)
+      } catch (err: any) {
+        console.error('Failed to load more search results:', err)
+      } finally {
+        setLoadingSearch(false)
+      }
+    } else {
+      setLoadingMore(true)
+      try {
+        const nextPage = displayedCurrentPage + 1
+        const result = await fetchRepos({ page: nextPage, perPage: REPOS_PER_PAGE })
+
+        if (result && result.repos.length > 0) {
+          setReposList(prev => ({
+            repos: [...prev.repos, ...result.repos],
+            hasMore: result.hasNext ?? false,
+            currentPage: nextPage,
+          }))
+        } else {
+          setReposList(prev => ({ ...prev, hasMore: false }))
+        }
+      } catch (err: any) {
+        console.error('Failed to load more repos:', err)
+        setReposList(prev => ({ ...prev, hasMore: false }))
+      } finally {
+        setLoadingMore(false)
       }
     }
-  }, [hasMore, loadMore])
+  }, [loadingMore, loadingSearch, displayedHasMore, displayedCurrentPage, isSearching, debouncedSearchQuery, loadSearchResults, fetchRepos])
+
 
   return (
     <div className="repos-page">
@@ -212,7 +279,7 @@ export const Welcome: React.FC = () => {
             <div className="quick-tags">
               {recentRepos.map((repo) => (
                 <button
-                  key={repo.id || repo.fullName}
+                  key={repo.id}
                   className="quick-tag"
                   onClick={() => handleSelectRepo(repo)}
                 >
@@ -235,8 +302,10 @@ export const Welcome: React.FC = () => {
         <div className="repos-status">
           <span className="status-indicator"></span>
           <span className="status-text">
-            {loading ? 'Loading...' : filteredRepos.length > 0
-              ? `Showing ${visibleRepos.length} of ${filteredRepos.length} repositories`
+            {loading || loadingSearch ? 'Loading...' : displayedRepos.length > 0
+              ? isSearching
+                ? `Found ${displayedRepos.length} repositories`
+                : `Showing ${displayedRepos.length} repositories${displayedHasMore ? '...' : ''}`
               : '0 repositories'
             }
           </span>
@@ -244,26 +313,30 @@ export const Welcome: React.FC = () => {
 
         {/* Repos Grid */}
         <div className="repos-content">
-          {loading ? (
+          {loading || (loadingSearch && displayedRepos.length === 0) ? (
             <div className="repos-loading">
               <div className="spinner"></div>
-              <p>Loading repositories...</p>
+              <p>{isSearching ? 'Searching repositories...' : 'Loading repositories...'}</p>
             </div>
           ) : error ? (
             <div className="repos-error">
               <p className="error-message">{error}</p>
             </div>
-          ) : filteredRepos.length > 0 ? (
+          ) : displayedRepos.length > 0 ? (
             <>
               <div className="repos-grid">
-                {visibleRepos.map((repo) => (
+                {displayedRepos.map((repo) => (
                   <div
                     key={repo.id || repo.fullName}
                     className="repo-card"
                     onClick={() => handleSelectRepo(repo)}
                   >
                     <div className="repo-card-header">
-                      <Globe size={20} className="repo-card-icon" />
+                      {repo.private ? (
+                        <Lock size={20} className="repo-card-icon" />
+                      ) : (
+                        <Globe size={20} className="repo-card-icon" />
+                      )}
                       <div className="repo-card-info">
                         <span className="repo-card-name">{repo.name}</span>
                         <span className="repo-card-owner">{repo.owner}</span>
@@ -279,17 +352,29 @@ export const Welcome: React.FC = () => {
                 ))}
               </div>
 
-              {/* Infinite Scroll Trigger */}
-              {hasMore && (
-                <div ref={loadMoreRef} className="load-more-trigger">
-                  <Loader2 size={20} className="load-more-spinner" />
-                  <span>Loading more...</span>
+              {/* Load More Button */}
+              {displayedHasMore && (
+                <div className="load-more-container">
+                  <button
+                    onClick={loadMore}
+                    disabled={loadingMore || loadingSearch}
+                    className="load-more-button"
+                  >
+                    {loadingMore || loadingSearch ? (
+                      <>
+                        <Loader2 size={20} className="load-more-spinner" />
+                        <span>Loading more...</span>
+                      </>
+                    ) : (
+                      <span>Load more</span>
+                    )}
+                  </button>
                 </div>
               )}
             </>
-          ) : searchQuery ? (
+          ) : isSearching ? (
             <div className="repos-empty">
-              <p>No repositories match "{searchQuery}"</p>
+              <p>No repositories match "{debouncedSearchQuery}"</p>
             </div>
           ) : (
             <div className="repos-empty">

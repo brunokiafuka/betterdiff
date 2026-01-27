@@ -3,6 +3,18 @@ import { action } from "./_generated/server";
 import { Octokit } from "@octokit/rest";
 import { api } from "./_generated/api";
 
+const DEFAULT_PAGE_SIZE = 13;
+
+type Repo = {
+  id: string;
+  owner: string;
+  name: string;
+  fullName: string;
+  defaultBranch: string;
+  private: boolean;
+  type: "github";
+};
+
 // Helper to get token by username
 async function getTokenByUsername(ctx: any): Promise<string | null> {
   const username = await ctx.runQuery(api.auth.getCurrentUsername, {});
@@ -10,38 +22,107 @@ async function getTokenByUsername(ctx: any): Promise<string | null> {
     return null;
   }
 
-
   return await ctx.runQuery(api.auth.getToken, { username });
 }
 
-export const fetchRepos = action({
-  args: {},
-  handler: async (ctx) => {
-    const token = await getTokenByUsername(ctx);
+async function getCurrentUsername(ctx: any): Promise<string | null> {
+  const username = await ctx.runQuery(api.auth.getCurrentUsername, {});
+  if (!username) {
+    return null;
+  }
+  return username;
+}
 
-    if (!token) {
-      return [];
+export const searchRepos = action({
+  args: {
+    query: v.string(),
+    page: v.optional(v.number()),
+    perPage: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const token = await getTokenByUsername(ctx);
+    const username = await getCurrentUsername(ctx);
+
+    if (!token || !username) {
+      return { repos: [], nextPage: null, hasNext: false };
     }
 
     try {
       const octokit = new Octokit({ auth: token });
-      const { data } = await octokit.repos.listForAuthenticatedUser({
+
+      const { data } = await octokit.search.repos({
+        q: `${args.query} in:name user:${username}`,
         sort: "updated",
-        per_page: 100,
+        per_page: args.perPage || DEFAULT_PAGE_SIZE,
+        page: args.page || 1,
       });
 
-      return data.map((repo) => ({
-        id: repo.id.toString(),
-        owner: repo.owner.login,
-        name: repo.name,
-        fullName: repo.full_name,
-        defaultBranch: repo.default_branch,
-        type: "github" as const,
-      }));
+      const hasNext = data.items.length === args.perPage;
+      const nextPage = hasNext ? (args.page || 1) + 1 : null;
+
+      return {
+        repos: data.items.map((repo) => ({
+          id: repo.id.toString(),
+          owner: repo.owner?.login,
+          name: repo.name,
+          fullName: repo.full_name,
+          defaultBranch: repo.default_branch,
+          private: repo.owner?.user_view_type !== "public",
+          type: "github" as const,
+        })) as Repo[],
+        nextPage,
+        hasNext,
+      };
     } catch (error: any) {
-      console.error("Failed to fetch repos:", error.message);
-      // Return empty array on error instead of throwing
-      return [];
+      return { repos: [], nextPage: null, hasNext: false };
+    }
+  },
+});
+
+export const fetchRepos = action({
+  args: {
+    page: v.optional(v.number()),
+    perPage: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const token = await getTokenByUsername(ctx);
+
+    if (!token) {
+      return { repos: [], nextPage: null, hasNext: false };
+    }
+
+    try {
+      const octokit = new Octokit({ auth: token });
+
+      const { data } = await octokit.repos.listForAuthenticatedUser({
+        sort: "updated",
+        per_page: args.perPage || DEFAULT_PAGE_SIZE,
+        page: args.page || 1,
+      });
+
+      const hasNext = data.length === args.perPage;
+      const nextPage = hasNext ? (args.page || 1) + 1 : null;
+
+      let repos = data;
+      if (hasNext) {
+        repos = data.slice(1, args.perPage || DEFAULT_PAGE_SIZE - 1);
+      }
+
+      return {
+        repos: repos.map((repo) => ({
+          id: repo.id.toString(),
+          owner: repo.owner.login,
+          name: repo.name,
+          fullName: repo.full_name,
+          defaultBranch: repo.default_branch,
+          private: repo.owner.user_view_type !== "public",
+          type: "github" as const,
+        })) as Repo[],
+        nextPage,
+        hasNext,
+      };
+    } catch (error: any) {
+      return { repos: [], nextPage: null, hasNext: false };
     }
   },
 });
@@ -176,7 +257,7 @@ export const getFileContent = action({
           atob(base64Content)
             .split("")
             .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-            .join("")
+            .join(""),
         );
         return content;
       }
@@ -217,7 +298,8 @@ export const compareRefs = action({
         files:
           data.files?.map((file) => {
             // Map GitHub status to our FileChange status
-            let status: "added" | "modified" | "deleted" | "renamed" = "modified";
+            let status: "added" | "modified" | "deleted" | "renamed" =
+              "modified";
             if (file.status === "added") status = "added";
             else if (file.status === "removed") status = "deleted";
             else if (file.status === "renamed") status = "renamed";
@@ -229,8 +311,7 @@ export const compareRefs = action({
               status,
               additions: file.additions,
               deletions: file.deletions,
-              oldSha:
-                status !== "added" ? data.base_commit.sha : undefined,
+              oldSha: status !== "added" ? data.base_commit.sha : undefined,
               newSha:
                 status !== "deleted"
                   ? data.commits[data.commits.length - 1]?.sha
