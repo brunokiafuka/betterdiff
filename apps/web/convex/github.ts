@@ -443,6 +443,151 @@ export const getCommit = action({
   },
 });
 
+// Analyze hotspots (action - analyzes frequently changed files)
+export const analyzeHotspots = action({
+  args: {
+    repoFullName: v.string(),
+    ref: v.string(),
+    timeWindow: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const token = await getTokenByUsername(ctx);
+
+    if (!token) {
+      return { files: [], repo: args.repoFullName, ref: args.ref, timeWindow: args.timeWindow, analyzedAt: new Date().toISOString() };
+    }
+
+    try {
+      const octokit = new Octokit({ auth: token });
+      const [owner, repo] = args.repoFullName.split("/");
+
+      // Calculate the date threshold
+      const since = new Date();
+      since.setDate(since.getDate() - args.timeWindow);
+
+      // Get commits in the time window
+      const commits: any[] = [];
+      let page = 1;
+      let hasMore = true;
+
+      while (hasMore && page <= 10) { // Limit to 10 pages to avoid rate limits
+        const { data } = await octokit.repos.listCommits({
+          owner,
+          repo,
+          sha: args.ref,
+          since: since.toISOString(),
+          per_page: 100,
+          page,
+        });
+
+        if (data.length === 0) {
+          hasMore = false;
+        } else {
+          commits.push(...data);
+          // Check if the oldest commit is still within the time window
+          const oldestCommit = data[data.length - 1];
+          if (oldestCommit.commit.author?.date && new Date(oldestCommit.commit.author.date) < since) {
+            hasMore = false;
+          } else {
+            page++;
+          }
+        }
+      }
+
+      // Analyze file changes
+      type FileStats = {
+        changeCount: number;
+        churn: number;
+        authors: Set<string>;
+        lastModified: string;
+        commits: string[];
+      }
+      const fileStats = new Map<string, FileStats>();
+
+      for (const commit of commits) {
+        try {
+          const { data: commitData } = await octokit.repos.getCommit({
+            owner,
+            repo,
+            ref: commit.sha,
+          });
+
+          const commitDate = commitData.commit.author?.date || commit.commit.author?.date || new Date().toISOString();
+
+          for (const file of commitData.files || []) {
+            if (!file.filename) continue;
+
+            let stats = fileStats.get(file.filename);
+            if (!stats) {
+              stats = {
+                changeCount: 0,
+                churn: 0,
+                authors: new Set<string>(),
+                lastModified: commitDate,
+                commits: [] as string[],
+              };
+              fileStats.set(file.filename, stats);
+            }
+
+            stats.changeCount++;
+            stats.churn += (file.additions || 0) + (file.deletions || 0);
+            if (commitData.commit.author?.name) {
+              stats.authors.add(commitData.commit.author.name);
+            }
+            if (new Date(commitDate) > new Date(stats.lastModified)) {
+              stats.lastModified = commitDate;
+            }
+            stats.commits.push(String(commit.sha));
+          }
+        } catch (err) {
+          // Skip commits that fail to load
+          console.error(`Failed to load commit ${commit.sha}:`, err);
+        }
+      }
+
+      // Calculate hotspot scores
+      const now = new Date();
+      const files = Array.from(fileStats.entries()).map(([path, stats]) => {
+        // Recency score: more recent changes = higher score
+        const daysSinceLastChange = (now.getTime() - new Date(stats.lastModified).getTime()) / (1000 * 60 * 60 * 24);
+        const recencyScore = Math.max(0, 100 - (daysSinceLastChange / args.timeWindow) * 100);
+
+        // Hotspot score: combination of change count, churn, author count, and recency
+        const changeScore = Math.min(100, (stats.changeCount / 20) * 100); // Normalize to 100
+        const churnScore = Math.min(100, (stats.churn / 1000) * 100); // Normalize to 100
+        const authorScore = Math.min(100, (stats.authors.size / 5) * 100); // Normalize to 100
+
+        const hotspotScore = (changeScore * 0.3 + churnScore * 0.3 + authorScore * 0.2 + recencyScore * 0.2);
+
+        return {
+          path,
+          changeCount: stats.changeCount,
+          churn: stats.churn,
+          recencyScore,
+          authorCount: stats.authors.size,
+          hotspotScore,
+          lastModified: stats.lastModified,
+          commits: stats.commits.slice(0, 10), // Limit to 10 commits
+        };
+      });
+
+      // Sort by hotspot score
+      files.sort((a, b) => b.hotspotScore - a.hotspotScore);
+
+      return {
+        repo: args.repoFullName,
+        ref: args.ref,
+        timeWindow: args.timeWindow,
+        analyzedAt: new Date().toISOString(),
+        files,
+      };
+    } catch (error: any) {
+      console.error("Failed to analyze hotspots:", error.message);
+      return { files: [], repo: args.repoFullName, ref: args.ref, timeWindow: args.timeWindow, analyzedAt: new Date().toISOString() };
+    }
+  },
+});
+
 // Get blame (action - placeholder, will implement with GraphQL later)
 export const getBlame = action({
   args: {

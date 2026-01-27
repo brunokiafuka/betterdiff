@@ -49,3 +49,7 @@ export const useGetCommit = () => {
 export const useGetBlame = () => {
   return useAction(api.github.getBlame);
 };
+
+export const useAnalyzeHotspots = () => {
+  return useAction(api.github.analyzeHotspots);
+};

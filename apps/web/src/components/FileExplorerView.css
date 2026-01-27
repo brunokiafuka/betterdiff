@@ -21,6 +21,29 @@
   overflow: hidden;
   border-left: var(--border-width) solid var(--border-subtle);
   min-width: 0;
+  transition: margin-right var(--transition-base);
+}
+
+.file-explorer-right.with-details-panel {
+  margin-right: 60px; /* Always account for tab width */
+  transition: margin-right var(--transition-base);
+}
+
+/* When panel has content, add more margin */
+.file-explorer-right.with-details-panel.panel-content-open {
+  margin-right: 400px;
+}
+
+@media (max-width: 1200px) {
+  .file-explorer-right.with-details-panel.panel-content-open {
+    margin-right: 350px;
+  }
+}
+
+@media (max-width: 768px) {
+  .file-explorer-right.with-details-panel {
+    margin-right: 0;
+  }
 }
 
 .file-explorer-content {

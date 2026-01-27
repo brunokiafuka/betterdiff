@@ -1,0 +1,117 @@
+.ai-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.ai-panel-info {
+  display: flex;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--bg-elevated);
+  border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.ai-panel-info-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  color: var(--accent-primary);
+  margin-top: 2px;
+}
+
+.ai-panel-info p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.ai-panel-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.ai-panel-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  background: var(--bg-elevated);
+  border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-base);
+}
+
+.ai-panel-input-wrapper:focus-within {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(94, 106, 210, 0.15);
+}
+
+.ai-panel-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+
+.ai-panel-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.ai-panel-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: var(--accent-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: white;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  flex-shrink: 0;
+}
+
+.ai-panel-submit:hover:not(:disabled) {
+  background: var(--accent-primary-hover, var(--accent-primary));
+  transform: scale(1.05);
+}
+
+.ai-panel-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ai-panel-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  color: var(--text-tertiary);
+  font-size: 14px;
+}
+
+.ai-panel-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3xl);
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 14px;
+  gap: var(--space-md);
+}
+
+.ai-panel-placeholder-subtitle {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  opacity: 0.7;
+}

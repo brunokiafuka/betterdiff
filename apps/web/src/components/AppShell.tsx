@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, } from 'react'
 import { useSignals } from '@preact/signals-react/runtime'
-import { Settings, Sparkles, Flame, LogOut, FolderOpen } from 'lucide-react'
+import { Settings, LogOut, FolderOpen } from 'lucide-react'
 import { useNavigate, Link, useLocation } from '@tanstack/react-router'
 import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
@@ -26,20 +26,6 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const isAuthPage = location.pathname === '/login'
   const isRepoViewerPage = location.pathname.startsWith('/repo/')
 
-  // Keyboard shortcut: Cmd+A to open AI panel
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
-        e.preventDefault()
-        if (repo) {
-          window.dispatchEvent(new CustomEvent('open-ai-panel'))
-        }
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [repo])
 
   const handleSettingsClick = () => {
     navigate({ to: '/settings' })
@@ -92,32 +78,6 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
           </div>
 
           <div className="top-bar-right">
-            {isRepoViewerPage && repo && (
-              <>
-                <button
-                  className="btn-action btn-icon"
-                  onClick={() => {
-                    track('hotspots_opened', { surface: 'web' })
-                    window.dispatchEvent(new CustomEvent('open-hotspots-panel'))
-                  }}
-                  title="Hotspots (Frequently Changed Files)"
-                  aria-label="Hotspots"
-                >
-                  <Flame size={18} />
-                </button>
-                <button
-                  className="btn-action btn-icon"
-                  onClick={() => {
-                    track('ai_panel_opened', { surface: 'web' })
-                    window.dispatchEvent(new CustomEvent('open-ai-panel'))
-                  }}
-                  title="AI Analysis (⌘A)"
-                  aria-label="AI Analysis"
-                >
-                  <Sparkles size={18} />
-                </button>
-              </>
-            )}
             {currentUser && (
               <div
                 className="user-profile"
