@@ -37,7 +37,18 @@
 
 /* Search Section */
 .repos-search-section {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-primary);
+  padding-top: var(--space-xl);
+  padding-bottom: var(--space-xl);
   margin-bottom: var(--space-xl);
+  margin-left: calc(-1 * var(--space-xl));
+  margin-right: calc(-1 * var(--space-xl));
+  padding-left: var(--space-xl);
+  padding-right: var(--space-xl);
+  border-bottom: var(--border-width) solid var(--border-subtle);
 }
 
 .search-bar-container {
