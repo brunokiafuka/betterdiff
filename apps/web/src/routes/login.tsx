@@ -80,12 +80,7 @@ export function LoginRoute() {
         </div>
       </Unauthenticated>
       <AuthLoading>
-        <div className="auth-page">
-          <div className="auth-loading">
-            <div className="spinner"></div>
-            <p>Checking authentication...</p>
-          </div>
-        </div>
+        <div />
       </AuthLoading>
     </>
   )
