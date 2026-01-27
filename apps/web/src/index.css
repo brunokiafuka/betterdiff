@@ -49,11 +49,13 @@
   --space-2xl: 32px;
   --space-3xl: 48px;
   
-  /* Border Radius */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
+  /* Border Radius - flattened across app */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-xs: 0px;
+  --radius-full: 0px;
   
   /* Transitions */
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
@@ -99,7 +101,6 @@ code {
 
 ::-webkit-scrollbar-thumb {
   background: var(--border-default);
-  border-radius: 3px;
   transition: background var(--transition-base);
 }
 
@@ -124,7 +125,6 @@ code {
   height: 20px;
   border: 2px solid var(--border-default);
   border-top-color: var(--accent-primary);
-  border-radius: 50%;
   animation: spin 0.6s linear infinite;
   margin: 0 auto;
 }

@@ -112,7 +112,6 @@
 
 .file-tree-content::-webkit-scrollbar-thumb {
   background: var(--border-default);
-  border-radius: 3px;
 }
 
 .file-tree-content::-webkit-scrollbar-thumb:hover {

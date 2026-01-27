@@ -12,7 +12,6 @@
   max-width: 640px;
   width: 100%;
   background: var(--bg-secondary);
-  border-radius: var(--radius-xl);
   border: var(--border-width) solid var(--border-default);
   padding: var(--space-2xl);
   backdrop-filter: blur(20px) saturate(180%);
@@ -47,7 +46,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-sm);
   transition: all var(--transition-base);
 }
 
@@ -98,7 +96,6 @@
   padding: var(--space-md) 44px var(--space-md) var(--space-md);
   background: var(--bg-elevated);
   border: var(--border-width) solid var(--border-default);
-  border-radius: var(--radius-md);
   color: var(--text-primary);
   font-size: 13px;
   font-family: var(--font-mono);
@@ -127,7 +124,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-sm);
   transition: all var(--transition-base);
   width: 32px;
   height: 32px;
@@ -159,7 +155,6 @@
 .field-help code {
   background: var(--bg-hover);
   padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-sm);
   font-size: 11px;
   color: var(--success);
   font-family: var(--font-mono);
@@ -168,7 +163,6 @@
 
 .alert {
   padding: var(--space-md) var(--space-lg);
-  border-radius: var(--radius-md);
   margin-bottom: var(--space-lg);
   font-size: 13px;
   line-height: 1.5;
@@ -195,7 +189,6 @@
 .btn-primary,
 .btn-secondary {
   padding: var(--space-md) var(--space-xl);
-  border-radius: var(--radius-md);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -248,7 +241,6 @@
   padding: var(--space-xl);
   background: var(--bg-elevated);
   border: var(--border-width) solid var(--error);
-  border-radius: var(--radius-md);
 }
 
 .danger-zone-confirm {
@@ -288,7 +280,6 @@
   background: var(--error);
   color: white;
   border: var(--border-width) solid var(--error);
-  border-radius: var(--radius-md);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
@@ -315,7 +306,6 @@
   padding: var(--space-md);
   background: var(--bg-elevated);
   border: var(--border-width) solid var(--error);
-  border-radius: var(--radius-md);
   color: var(--text-primary);
   font-size: 13px;
   font-family: var(--font-mono);
