@@ -3,6 +3,7 @@ import { useSignals } from '@preact/signals-react/runtime'
 import { currentRepo, baseRef } from '../stores/appStore'
 import { useGetFileHistory } from '../services/github'
 import './FileHistoryPanel.css'
+import { track } from '../services/analytics'
 
 interface CommitInfo {
   sha: string
@@ -149,7 +150,18 @@ export const FileHistoryPanel: React.FC<FileHistoryPanelProps> = ({
 
   return (
     <div className={`file-history-panel ${isCollapsed ? 'collapsed' : ''}`}>
-      <div className="file-history-header" onClick={() => setIsCollapsed(!isCollapsed)}>
+      <div
+        className="file-history-header"
+        onClick={() => {
+          const next = !isCollapsed
+          setIsCollapsed(next)
+          if (next === false) {
+            // panel is being collapsed; only track when opening
+            return
+          }
+          track('file_history_opened', { surface: 'web' })
+        }}
+      >
         <div className="header-left">
           <span className={`collapse-icon ${isCollapsed ? '' : 'expanded'}`}>▶</span>
           <h3>History</h3>

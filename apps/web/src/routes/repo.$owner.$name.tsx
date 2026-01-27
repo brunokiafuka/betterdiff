@@ -5,6 +5,7 @@ import { setRepo } from '../stores/appStore'
 import { useGetRepo } from '../services/github'
 import { ProtectedRoute } from '../components/ProtectedRoute'
 import type { Repo } from '../types'
+import { track } from '../services/analytics'
 
 export function RepoViewerRoute() {
   const { owner, name } = useParams({ from: '/repo/$owner/$name' })
@@ -54,6 +55,13 @@ export function RepoViewerRoute() {
 
     loadRepo()
   }, [owner, name, fullName, getRepo])
+
+  useEffect(() => {
+    track('repo_viewed', {
+      surface: 'web',
+      provider: 'github',
+    })
+  }, [])
 
   if (loading) {
     return (

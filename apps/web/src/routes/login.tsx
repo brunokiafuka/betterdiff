@@ -6,11 +6,13 @@ import { Github } from 'lucide-react'
 import iconImage from '../assets/icon.png'
 import './Auth.css'
 import { Footer } from '../components/Footer'
+import { track } from '../services/analytics'
 
 function AuthenticatedRedirect() {
   const navigate = useNavigate()
 
   useEffect(() => {
+    track('login_succeeded', { surface: 'web' })
     // Use replace to avoid adding to history
     navigate({ to: '/repos', replace: true })
   }, [navigate])
@@ -21,7 +23,12 @@ function AuthenticatedRedirect() {
 export function LoginRoute() {
   const { signIn } = useAuthActions()
 
+  useEffect(() => {
+    track('login_viewed', { surface: 'web' })
+  }, [])
+
   const handleSignIn = () => {
+    track('login_started', { surface: 'web' })
     // Store the intended destination before redirecting
     sessionStorage.setItem('authRedirect', '/repos')
     void signIn('github')

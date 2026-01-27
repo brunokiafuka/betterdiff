@@ -5,6 +5,7 @@ import { setRepo } from '../stores/appStore'
 import { useFetchRepos } from '../services/github'
 import './Welcome.css'
 import { Footer } from './Footer'
+import { track } from '../services/analytics'
 
 const REPOS_PER_PAGE = 12
 
@@ -39,6 +40,16 @@ export const Welcome: React.FC = () => {
 
     loadRepos()
   }, [fetchRepos])
+
+  // Track when repos view is visible and data has loaded
+  useEffect(() => {
+    if (!loading) {
+      track('repos_viewed', {
+        surface: 'web',
+        has_repos: repos.length > 0,
+      })
+    }
+  }, [loading, repos.length])
 
   // Load recent repos from localStorage
   useEffect(() => {

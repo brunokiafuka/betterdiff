@@ -19,6 +19,7 @@
     "convex": "^1.31.6",
     "diff": "^5.2.0",
     "lucide-react": "^0.344.0",
+    "posthog-js": "^1.335.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

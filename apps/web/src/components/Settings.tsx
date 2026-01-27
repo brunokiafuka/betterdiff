@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { X, Trash2, AlertTriangle } from 'lucide-react'
 import { useDeleteAccount } from '../services/github'
 import { useAuthActions } from '@convex-dev/auth/react'
 import './Settings.css'
+import { track } from '../services/analytics'
 
 export const Settings: React.FC = () => {
   const navigate = useNavigate()
@@ -13,6 +14,10 @@ export const Settings: React.FC = () => {
   const [confirmText, setConfirmText] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    track('settings_viewed', { surface: 'web' })
+  }, [])
 
   const handleClose = () => {
     // Check if there's browser history to go back to

@@ -10,6 +10,7 @@ import { RepoSearchModal } from './RepoSearchModal'
 import { BranchSelector } from './BranchSelector'
 import { useFetchRepos } from '../services/github'
 import './AppShell.css'
+import { track } from '../services/analytics'
 
 interface AppShellProps {
   children: React.ReactNode
@@ -114,6 +115,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
   const handleRepoNameClick = () => {
     setShowModal(true)
+    track('repo_search_opened', { surface: 'web' })
   }
 
   const handleLogout = async () => {
@@ -163,6 +165,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 <button
                   className="btn-action btn-icon"
                   onClick={() => {
+                    track('hotspots_opened', { surface: 'web' })
                     window.dispatchEvent(new CustomEvent('open-hotspots-panel'))
                   }}
                   title="Hotspots (Frequently Changed Files)"
@@ -173,6 +176,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 <button
                   className="btn-action btn-icon"
                   onClick={() => {
+                    track('ai_panel_opened', { surface: 'web' })
                     window.dispatchEvent(new CustomEvent('open-ai-panel'))
                   }}
                   title="AI Analysis (⌘A)"
