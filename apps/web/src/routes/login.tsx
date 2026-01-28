@@ -13,8 +13,11 @@ function AuthenticatedRedirect() {
 
   useEffect(() => {
     track('login_succeeded', { surface: 'web' })
-    // Use replace to avoid adding to history
-    navigate({ to: '/repos', replace: true })
+    // After a successful login, honour any explicit redirect the app asked for.
+    const redirectPath = sessionStorage.getItem('authRedirect') || '/repos'
+    sessionStorage.removeItem('authRedirect')
+    // Use replace to avoid adding an extra entry to history
+    navigate({ to: redirectPath as any, replace: true })
   }, [navigate])
 
   return null

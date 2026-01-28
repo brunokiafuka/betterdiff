@@ -12,9 +12,16 @@ function AuthenticatedRedirect() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    // Check if there's a stored redirect path from login
-    const redirectPath = sessionStorage.getItem('authRedirect') || '/repos'
-    sessionStorage.removeItem('authRedirect')
+    // Only redirect if this navigation was triggered by an auth flow.
+    // We detect that via a stored redirect path set before calling signIn().
+    const redirectPath = sessionStorage.getItem('authRedirect')
+    if (!redirectPath) {
+      // No pending auth redirect – user likely just visited `/` directly,
+      // so keep them on the marketing page instead of forcing `/repos`.
+      return
+    }
+
+    sessionStorage.remove( 'authRedirect')
     navigate({ to: redirectPath as any, replace: true })
   }, [navigate])
 
