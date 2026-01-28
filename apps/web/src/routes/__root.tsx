@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Outlet, useLocation } from '@tanstack/react-router'
 import { AppShell } from '../components/AppShell'
+import { WindowProvider } from '../components/WindowProvider'
 import { track } from '../services/analytics'
 
 export function RootLayout() {
@@ -16,8 +17,10 @@ export function RootLayout() {
   }
 
   return (
-    <AppShell>
-      <Outlet />
-    </AppShell>
+    <WindowProvider>
+      <AppShell>
+        <Outlet />
+      </AppShell>
+    </WindowProvider>
   )
 }

@@ -78,6 +78,13 @@
   padding: var(--space-3xl);
 }
 
+.empty-state .btn-repos {
+  margin-top: var(--space-xl);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .empty-icon {
   color: var(--text-tertiary);
   margin: 0 auto var(--space-xl);

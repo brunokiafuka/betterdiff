@@ -9,6 +9,7 @@ import { currentRepo } from '../stores/appStore'
 import { BranchSelector } from './BranchSelector'
 import './AppShell.css'
 import { track } from '../services/analytics'
+import { useWindowInfo } from './WindowProvider'
 
 interface AppShellProps {
   children: React.ReactNode
@@ -19,6 +20,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const navigate = useNavigate()
   const location = useLocation()
   const repo = currentRepo.value
+  const { isMobile } = useWindowInfo()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const currentUser = useQuery(api.auth.getCurrentUser)
   const { signOut } = useAuthActions()
@@ -49,7 +51,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             <Link to="/repos" className="app-logo" title="betterdiff">
               <code>betterdiff</code>
             </Link>
-            {isRepoViewerPage && (
+            {isRepoViewerPage && !isMobile && (
               <>
                 <Link to="/repos" className="btn-repos" title="Back to Repositories">
                   <FolderOpen size={18} />
