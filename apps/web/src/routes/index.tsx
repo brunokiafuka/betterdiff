@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { Authenticated } from 'convex/react'
+import { Authenticated, Unauthenticated, useQuery } from 'convex/react'
 import { GitBranch, GitCommit, FileCode, Github, } from 'lucide-react'
+import { api } from '../../convex/_generated/api'
 import iconImage from '../assets/icon.png'
 import diffImage from '../assets/diff.png'
 import './Landing.css'
@@ -21,11 +22,44 @@ function AuthenticatedRedirect() {
       return
     }
 
-    sessionStorage.remove( 'authRedirect')
+    sessionStorage.remove('authRedirect')
     navigate({ to: redirectPath as any, replace: true })
   }, [navigate])
 
   return null
+}
+
+function LandingUserNav() {
+  const currentUser = useQuery(api.auth.getCurrentUser)
+
+  if (!currentUser) {
+    return null
+  }
+
+  const displayName =
+    currentUser.username ||
+    currentUser.email ||
+    'Your repos'
+
+  const initial =
+    (currentUser.username || currentUser.email || 'U').charAt(0).toUpperCase()
+
+  return (
+    <Link to="/repos" className="landing-nav-cta landing-nav-user">
+      {currentUser.image ? (
+        <img
+          src={currentUser.image}
+          alt={displayName}
+          className="landing-nav-user-avatar"
+        />
+      ) : (
+        <div className="landing-nav-user-avatar placeholder">
+          {initial}
+        </div>
+      )}
+      <code className="landing-nav-user-name">@{displayName}</code>
+    </Link>
+  )
 }
 
 export function IndexRoute() {
@@ -78,9 +112,14 @@ export function IndexRoute() {
                 <Github size={16} style={{ marginRight: 6 }} />
                 GitHub
               </a>
-              <Link to="/login" className="landing-nav-cta">
-                Get Started
-              </Link>
+              <Authenticated>
+                <LandingUserNav />
+              </Authenticated>
+              <Unauthenticated>
+                <Link to="/login" className="landing-nav-cta">
+                  Get Started
+                </Link>
+              </Unauthenticated>
             </div>
           </div>
         </nav>
