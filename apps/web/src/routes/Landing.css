@@ -225,6 +225,12 @@
   padding: 0 var(--space-xl) var(--space-3xl);
 }
 
+@media (max-width: 768px) {
+  .landing-demo {
+    display: none;
+  }
+}
+
 .landing-demo-window {
   background: var(--bg-secondary);
   border: var(--border-width) solid var(--border-default);
