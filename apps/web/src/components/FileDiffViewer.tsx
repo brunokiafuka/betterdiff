@@ -18,7 +18,6 @@ export const FileDiffViewer: React.FC<FileDiffViewerProps> = ({
   baseSha,
   headSha,
   repoFullName,
-  repo
 }) => {
   useSignals()
   const getFileContent = useGetFileContent()

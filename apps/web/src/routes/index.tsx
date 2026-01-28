@@ -22,7 +22,7 @@ function AuthenticatedRedirect() {
       return
     }
 
-    sessionStorage.remove('authRedirect')
+    sessionStorage.removeItem('authRedirect')
     navigate({ to: redirectPath as any, replace: true })
   }, [navigate])
 

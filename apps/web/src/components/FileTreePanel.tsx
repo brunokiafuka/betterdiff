@@ -64,7 +64,7 @@ export const FileTreePanel: React.FC<FileTreePanelProps> = ({ initialSelectedFil
         const parts = file.path.split('/')
         let currentLevel = root
 
-        parts.forEach((part: string, index: number) => {
+        parts.forEach((_: string, index: number) => {
           const isFile = index === parts.length - 1 && file.type === 'blob'
           const fullPath = parts.slice(0, index + 1).join('/')
 
@@ -139,7 +139,7 @@ export const FileTreePanel: React.FC<FileTreePanelProps> = ({ initialSelectedFil
     window.dispatchEvent(new CustomEvent('file-selected', { detail: { path } }))
   }
 
-  const renderTree = (nodes: FileNode[], level: number = 0): JSX.Element[] => {
+  const renderTree = (nodes: FileNode[], level: number = 0) => {
     return nodes.map((node) => {
       const fileName = node.path.split('/').pop() || node.path
       const isExpanded = expandedDirs.has(node.path)
