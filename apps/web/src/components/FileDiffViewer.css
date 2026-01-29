@@ -98,7 +98,18 @@
 
 .file-diff-viewer .diff-editor-container {
   flex: 1;
-  overflow: hidden;
+  overflow: auto;
+}
+
+/* Pierre Diffs styling */
+.file-diff-viewer .pierre-diff-viewer,
+.file-diff-viewer .pierre-diff-file {
+  height: 100%;
+  --diffs-font-family: var(--font-mono);
+  --diffs-font-size: 13px;
+  --diffs-line-height: 1.5;
+  --diffs-tab-size: 2;
+  --diffs-header-font-family: var(--font-sans);
 }
 
 .file-diff-viewer .diff-loading {

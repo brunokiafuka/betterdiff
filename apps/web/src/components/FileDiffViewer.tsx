@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSignals } from '@preact/signals-react/runtime'
-import { DiffEditor, Editor } from '@monaco-editor/react'
+import { MultiFileDiff, File } from '@pierre/diffs/react'
+import type { FileContents } from '@pierre/diffs'
 import { useGetFileContent } from '../services/github'
 import './FileDiffViewer.css'
 
@@ -71,36 +72,17 @@ export const FileDiffViewer: React.FC<FileDiffViewerProps> = ({
     loadFileContents()
   }, [baseSha, headSha, repoFullName, filePath, getFileContent])
 
-  // Detect language from file extension
-  const getLanguage = (path: string) => {
-    const ext = path.split('.').pop()?.toLowerCase()
-    const langMap: Record<string, string> = {
-      'ts': 'typescript',
-      'tsx': 'typescript',
-      'js': 'javascript',
-      'jsx': 'javascript',
-      'py': 'python',
-      'rb': 'ruby',
-      'go': 'go',
-      'rs': 'rust',
-      'java': 'java',
-      'c': 'c',
-      'cpp': 'cpp',
-      'h': 'c',
-      'hpp': 'cpp',
-      'css': 'css',
-      'scss': 'scss',
-      'html': 'html',
-      'json': 'json',
-      'yaml': 'yaml',
-      'yml': 'yaml',
-      'md': 'markdown',
-      'sh': 'shell',
-      'bash': 'shell',
-      'mdx': 'markdown',
-    }
-    return langMap[ext || ''] || 'plaintext'
-  }
+  // Create stable file objects for @pierre/diffs
+  // The library uses reference equality to detect changes
+  const oldFile: FileContents = useMemo(() => ({
+    name: filePath,
+    contents: oldContent,
+  }), [filePath, oldContent])
+
+  const newFile: FileContents = useMemo(() => ({
+    name: filePath,
+    contents: newContent,
+  }), [filePath, newContent])
 
   if (!baseSha || !headSha) {
     return (
@@ -129,40 +111,31 @@ export const FileDiffViewer: React.FC<FileDiffViewerProps> = ({
             <span>Loading file contents...</span>
           </div>
         ) : isSameCommit ? (
-          // Show single Monaco editor for viewing file at one commit
-          <Editor
-            height="100%"
-            language={getLanguage(filePath)}
-            value={newContent}
-            theme="vs-dark"
+          // Show single file viewer for viewing file at one commit
+          <File
+            file={newFile}
             options={{
-              readOnly: true,
-              minimap: { enabled: true },
-              scrollBeyondLastLine: false,
-              fontSize: 12,
-              lineNumbers: 'on',
-              renderLineHighlight: 'all',
-              automaticLayout: true,
+              theme: 'pierre-dark',
+              disableFileHeader: true,
+              overflow: 'scroll',
             }}
+            className="pierre-diff-file"
           />
         ) : (
-          // Show diff editor for comparing two commits
-          <DiffEditor
-            height="100%"
-            language={getLanguage(filePath)}
-            original={oldContent}
-            modified={newContent}
-            theme="vs-dark"
+          // Show diff viewer for comparing two commits
+          <MultiFileDiff
+            oldFile={oldFile}
+            newFile={newFile}
             options={{
-              renderSideBySide: true,
-              readOnly: true,
-              minimap: { enabled: true },
-              scrollBeyondLastLine: false,
-              fontSize: 12,
-              lineNumbers: 'on',
-              renderLineHighlight: 'all',
-              automaticLayout: true,
+              theme: 'pierre-dark',
+              diffStyle: 'split',
+              diffIndicators: 'bars',
+              hunkSeparators: 'line-info',
+              lineDiffType: 'word-alt',
+              disableFileHeader: true,
+              overflow: 'scroll',
             }}
+            className="pierre-diff-viewer"
           />
         )}
       </div>
