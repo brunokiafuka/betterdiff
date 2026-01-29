@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Folder, FolderOpen, File } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
+import { useUiStore } from '../stores/uiStore'
 import './FileTreePanel.css'
 
 interface FileNode {
@@ -11,6 +12,7 @@ interface FileNode {
 
 export const FileTreePanel: React.FC = () => {
   const { currentRepo, baseRef } = useAppStore()
+  const { startAction, finishAction, failAction, addToast } = useUiStore()
   const [fileTree, setFileTree] = useState<FileNode[]>([])
   const [expandedDirs, setExpandedDirs] = useState<Set<string>>(new Set())
   const [selectedFile, setSelectedFile] = useState<string | null>(null)
@@ -21,6 +23,7 @@ export const FileTreePanel: React.FC = () => {
 
     const loadFileTree = async () => {
       setLoading(true)
+      startAction('loadFileTree', 'Loading file tree...')
       try {
         const tree = currentRepo.type === 'local'
           ? await window.electronAPI.local.getRepoTree(currentRepo.localPath!, baseRef.name)
@@ -28,13 +31,16 @@ export const FileTreePanel: React.FC = () => {
         setFileTree(buildTreeStructure(tree))
       } catch (error) {
         console.error('Failed to load file tree:', error)
+        failAction('loadFileTree', 'Failed to load file tree')
+        addToast('error', 'Failed to load file tree')
       } finally {
         setLoading(false)
+        finishAction('loadFileTree')
       }
     }
 
     loadFileTree()
-  }, [currentRepo, baseRef])
+  }, [currentRepo, baseRef, startAction, finishAction, failAction, addToast])
 
   const buildTreeStructure = (files: any[]): FileNode[] => {
     const root: FileNode[] = []

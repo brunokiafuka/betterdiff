@@ -89,30 +89,6 @@
   opacity: 0.9;
 }
 
-.landing-nav-user {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
-.landing-nav-user-avatar {
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
-  object-fit: cover;
-  border: var(--border-width) solid var(--border-default);
-}
-
-.landing-nav-user-avatar.placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--accent-primary);
-  color: var(--bg-primary);
-  font-size: 12px;
-  font-weight: 600;
-}
-
 /* Hero Section */
 .landing-hero {
   position: relative;
@@ -133,14 +109,6 @@
   font-size: 13px;
   color: var(--text-secondary);
   margin-bottom: var(--space-2xl);
-}
-
-.landing-nav-user-name {
-  font-size: 13px;
-  font-weight: 500;
-  font-family: var(--font-mono);
-  letter-spacing: -0.1px;
-  text-transform: lowercase;
 }
 
 .landing-badge-dot {
@@ -223,12 +191,6 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 var(--space-xl) var(--space-3xl);
-}
-
-@media (max-width: 768px) {
-  .landing-demo {
-    display: none;
-  }
 }
 
 .landing-demo-window {

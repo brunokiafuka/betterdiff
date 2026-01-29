@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSignals } from '@preact/signals-react/runtime'
 import { DiffEditor, Editor } from '@monaco-editor/react'
+import { Info } from 'lucide-react'
 import { useGetFileContent } from '../services/github'
 import './FileDiffViewer.css'
 
@@ -18,6 +19,7 @@ export const FileDiffViewer: React.FC<FileDiffViewerProps> = ({
   baseSha,
   headSha,
   repoFullName,
+  onDetailsClick
 }) => {
   useSignals()
   const getFileContent = useGetFileContent()
@@ -120,6 +122,16 @@ export const FileDiffViewer: React.FC<FileDiffViewerProps> = ({
         <div className="diff-file-path">
           {filePath}
         </div>
+        {onDetailsClick && (
+          <button
+            className="diff-details-btn"
+            onClick={onDetailsClick}
+            title="View commit details"
+            disabled={!baseSha || !headSha}
+          >
+            <Info size={16} />
+          </button>
+        )}
       </div>
 
       <div className="diff-editor-container">

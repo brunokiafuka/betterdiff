@@ -100,7 +100,7 @@ export const FileHistoryPanel: React.FC<FileHistoryPanelProps> = ({
     }
 
     loadFileHistory()
-  }, [repo, ref, filePath, getFileHistory, memoizedOnCommitsSelected])
+  }, [repo, ref, filePath, getFileHistory, memoizedOnCommitsSelected, initialBaseSha, initialHeadSha])
 
   const extractPRNumber = (message: string): number | undefined => {
     const match = message.match(/#(\d+)/)

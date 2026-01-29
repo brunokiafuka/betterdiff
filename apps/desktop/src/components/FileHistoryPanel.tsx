@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useAppStore } from '../stores/appStore'
+import { useUiStore } from '../stores/uiStore'
 import './FileHistoryPanel.css'
 
 interface CommitInfo {
@@ -21,6 +22,7 @@ interface FileHistoryPanelProps {
 
 export const FileHistoryPanel: React.FC<FileHistoryPanelProps> = ({ filePath, onCommitsSelected }) => {
   const { currentRepo, baseRef } = useAppStore()
+  const { startAction, finishAction, failAction, addToast } = useUiStore()
   const [commits, setCommits] = useState<CommitInfo[]>([])
   const [selectedCommits, setSelectedCommits] = useState<[string | null, string | null]>([null, null])
   const [loading, setLoading] = useState(false)
@@ -31,6 +33,7 @@ export const FileHistoryPanel: React.FC<FileHistoryPanelProps> = ({ filePath, on
 
     const loadFileHistory = async () => {
       setLoading(true)
+      startAction('loadFileHistory', 'Loading commit history...')
       try {
         const history = currentRepo.type === 'local'
           ? await window.electronAPI.local.getFileHistory(
@@ -66,13 +69,16 @@ export const FileHistoryPanel: React.FC<FileHistoryPanelProps> = ({ filePath, on
         }
       } catch (error) {
         console.error('Failed to load file history:', error)
+        failAction('loadFileHistory', 'Failed to load commit history')
+        addToast('error', 'Failed to load commit history')
       } finally {
         setLoading(false)
+        finishAction('loadFileHistory')
       }
     }
 
     loadFileHistory()
-  }, [currentRepo, baseRef, filePath, onCommitsSelected])
+  }, [currentRepo, baseRef, filePath, onCommitsSelected, startAction, finishAction, failAction, addToast])
 
   const extractPRNumber = (message: string): number | undefined => {
     const match = message.match(/#(\d+)/)

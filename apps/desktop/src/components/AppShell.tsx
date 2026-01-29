@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Settings, Sparkles, Flame } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
+import { useUiStore } from '../stores/uiStore'
 import { RepoSearchModal } from './RepoSearchModal'
 import { BranchSelector } from './BranchSelector'
+import { GlobalFeedback } from './GlobalFeedback'
 import './AppShell.css'
 
 interface AppShellProps {
@@ -15,6 +17,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
   const [showModal, setShowModal] = useState(false)
   const [repos, setRepos] = useState<any[]>([])
   const [recentRepos, setRecentRepos] = useState<any[]>([])
+  const [openingLocalRepo, setOpeningLocalRepo] = useState(false)
+  const { startAction, finishAction, failAction, addToast } = useUiStore()
 
   // Keyboard shortcut: Cmd+A to open AI panel
   useEffect(() => {
@@ -31,15 +35,70 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [currentRepo])
 
-  // Listen for menu events to open repo modal
+  const handleSelectLocalRepo = useCallback(async () => {
+    if (openingLocalRepo) {
+      return
+    }
+    setOpeningLocalRepo(true)
+    startAction('openLocalRepo', 'Opening local repository...')
+    try {
+      const repo = await window.electronAPI.local.selectFolder()
+      if (!repo) {
+        finishAction('openLocalRepo')
+        return
+      }
+
+      if (!repo.type) {
+        repo.type = 'local'
+      }
+
+      setRepo(repo)
+
+      try {
+        const config = await window.electronAPI.config.read() || {}
+        const recent = config.recentRepos || []
+        const filtered = recent.filter((r: any) =>
+          r.type === 'local'
+            ? r.localPath !== repo.localPath
+            : r.fullName !== repo.fullName
+        )
+        const updated = [{ ...repo, lastAccessed: new Date().toISOString() }, ...filtered].slice(0, 10)
+        await window.electronAPI.config.write({ ...config, recentRepos: updated })
+        setRecentRepos(updated.filter((r: any) => r.type !== 'local' && !r.localPath).slice(0, 5))
+      } catch (err) {
+        console.error('Failed to update recent repos:', err)
+      }
+
+      const branches = await window.electronAPI.local.listBranches(repo.localPath!)
+      if (branches.length > 0) {
+        const currentBranch = branches.find((b: any) => b.isCurrent) ||
+          branches.find((b: any) => b.name === repo.defaultBranch) ||
+          branches[0]
+        setRefs(currentBranch, currentBranch)
+      }
+    } catch (err) {
+      console.error('Failed to select local repo:', err)
+      failAction('openLocalRepo', 'Failed to open local repository')
+      addToast('error', 'Failed to open local repository')
+    } finally {
+      setOpeningLocalRepo(false)
+      finishAction('openLocalRepo')
+    }
+  }, [openingLocalRepo, setRepo, setRefs, startAction, finishAction, failAction, addToast])
+
+  // Listen for menu events to open repo modal or local picker
   useEffect(() => {
     const handleMenuOpenRemote = () => {
       setShowModal(true)
     }
 
     window.addEventListener('menu:open-remote-repo', handleMenuOpenRemote)
-    return () => window.removeEventListener('menu:open-remote-repo', handleMenuOpenRemote)
-  }, [])
+    window.addEventListener('menu:open-local-repo', handleSelectLocalRepo)
+    return () => {
+      window.removeEventListener('menu:open-remote-repo', handleMenuOpenRemote)
+      window.removeEventListener('menu:open-local-repo', handleSelectLocalRepo)
+    }
+  }, [handleSelectLocalRepo])
 
   useEffect(() => {
     const loadRepos = async () => {
@@ -128,7 +187,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
   }
 
   return (
-    <div className="app-shell">
+    <>
+      <div className="app-shell">
       <div className="top-bar">
         <div className="top-bar-left">
           <div className="repo-selector">
@@ -209,6 +269,9 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
           }}
         />
       )}
-    </div>
+      </div>
+
+      <GlobalFeedback />
+    </>
   )
 }

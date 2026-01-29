@@ -23,7 +23,7 @@ export function FlickeringGrid({
   maxOpacity = 0.5,
 }: FlickeringGridProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const animationFrameRef = useRef<number | null>(null)
+  const animationFrameRef = useRef<number>()
   const [dimensions, setDimensions] = useState({ width: 1200, height: 3000 })
 
   useEffect(() => {

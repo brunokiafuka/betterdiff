@@ -3,18 +3,6 @@ import { action } from "./_generated/server";
 import { Octokit } from "@octokit/rest";
 import { api } from "./_generated/api";
 
-const DEFAULT_PAGE_SIZE = 13;
-
-type Repo = {
-  id: string;
-  owner: string;
-  name: string;
-  fullName: string;
-  defaultBranch: string;
-  private: boolean;
-  type: "github";
-};
-
 // Helper to get token by username
 async function getTokenByUsername(ctx: any): Promise<string | null> {
   const username = await ctx.runQuery(api.auth.getCurrentUsername, {});
@@ -22,107 +10,38 @@ async function getTokenByUsername(ctx: any): Promise<string | null> {
     return null;
   }
 
+
   return await ctx.runQuery(api.auth.getToken, { username });
 }
 
-async function getCurrentUsername(ctx: any): Promise<string | null> {
-  const username = await ctx.runQuery(api.auth.getCurrentUsername, {});
-  if (!username) {
-    return null;
-  }
-  return username;
-}
-
-export const searchRepos = action({
-  args: {
-    query: v.string(),
-    page: v.optional(v.number()),
-    perPage: v.optional(v.number()),
-  },
-  handler: async (ctx, args) => {
-    const token = await getTokenByUsername(ctx);
-    const username = await getCurrentUsername(ctx);
-
-    if (!token || !username) {
-      return { repos: [], nextPage: null, hasNext: false };
-    }
-
-    try {
-      const octokit = new Octokit({ auth: token });
-
-      const { data } = await octokit.search.repos({
-        q: `${args.query} in:name user:${username}`,
-        sort: "updated",
-        per_page: args.perPage || DEFAULT_PAGE_SIZE,
-        page: args.page || 1,
-      });
-
-      const hasNext = data.items.length === args.perPage;
-      const nextPage = hasNext ? (args.page || 1) + 1 : null;
-
-      return {
-        repos: data.items.map((repo) => ({
-          id: repo.id.toString(),
-          owner: repo.owner?.login,
-          name: repo.name,
-          fullName: repo.full_name,
-          defaultBranch: repo.default_branch,
-          private: repo.owner?.user_view_type !== "public",
-          type: "github" as const,
-        })) as Repo[],
-        nextPage,
-        hasNext,
-      };
-    } catch (error: any) {
-      return { repos: [], nextPage: null, hasNext: false };
-    }
-  },
-});
-
 export const fetchRepos = action({
-  args: {
-    page: v.optional(v.number()),
-    perPage: v.optional(v.number()),
-  },
-  handler: async (ctx, args) => {
+  args: {},
+  handler: async (ctx) => {
     const token = await getTokenByUsername(ctx);
 
     if (!token) {
-      return { repos: [], nextPage: null, hasNext: false };
+      return [];
     }
 
     try {
       const octokit = new Octokit({ auth: token });
-
       const { data } = await octokit.repos.listForAuthenticatedUser({
         sort: "updated",
-        per_page: args.perPage || DEFAULT_PAGE_SIZE,
-        page: args.page || 1,
+        per_page: 100,
       });
 
-      const hasNext = data.length === args.perPage;
-      const nextPage = hasNext ? (args.page || 1) + 1 : null;
-
-      let repos = data;
-      if (hasNext) {
-        repos = data.slice(1, args.perPage || DEFAULT_PAGE_SIZE - 1);
-      }
-
-      return {
-        repos: repos.map((repo) => ({
-          id: repo.id.toString(),
-          owner: repo.owner.login,
-          name: repo.name,
-          fullName: repo.full_name,
-          defaultBranch: repo.default_branch,
-          private: repo.owner.user_view_type !== "public",
-          type: "github" as const,
-        })) as Repo[],
-        nextPage,
-        hasNext,
-      };
+      return data.map((repo) => ({
+        id: repo.id.toString(),
+        owner: repo.owner.login,
+        name: repo.name,
+        fullName: repo.full_name,
+        defaultBranch: repo.default_branch,
+        type: "github" as const,
+      }));
     } catch (error: any) {
-      return { repos: [], nextPage: null, hasNext: false };
+      console.error("Failed to fetch repos:", error.message);
+      // Return empty array on error instead of throwing
+      return [];
     }
   },
 });
@@ -257,7 +176,7 @@ export const getFileContent = action({
           atob(base64Content)
             .split("")
             .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-            .join(""),
+            .join("")
         );
         return content;
       }
@@ -298,8 +217,7 @@ export const compareRefs = action({
         files:
           data.files?.map((file) => {
             // Map GitHub status to our FileChange status
-            let status: "added" | "modified" | "deleted" | "renamed" =
-              "modified";
+            let status: "added" | "modified" | "deleted" | "renamed" = "modified";
             if (file.status === "added") status = "added";
             else if (file.status === "removed") status = "deleted";
             else if (file.status === "renamed") status = "renamed";
@@ -311,7 +229,8 @@ export const compareRefs = action({
               status,
               additions: file.additions,
               deletions: file.deletions,
-              oldSha: status !== "added" ? data.base_commit.sha : undefined,
+              oldSha:
+                status !== "added" ? data.base_commit.sha : undefined,
               newSha:
                 status !== "deleted"
                   ? data.commits[data.commits.length - 1]?.sha
@@ -439,151 +358,6 @@ export const getCommit = action({
     } catch (error: any) {
       console.error("Failed to get commit:", error.message);
       return null;
-    }
-  },
-});
-
-// Analyze hotspots (action - analyzes frequently changed files)
-export const analyzeHotspots = action({
-  args: {
-    repoFullName: v.string(),
-    ref: v.string(),
-    timeWindow: v.number(),
-  },
-  handler: async (ctx, args) => {
-    const token = await getTokenByUsername(ctx);
-
-    if (!token) {
-      return { files: [], repo: args.repoFullName, ref: args.ref, timeWindow: args.timeWindow, analyzedAt: new Date().toISOString() };
-    }
-
-    try {
-      const octokit = new Octokit({ auth: token });
-      const [owner, repo] = args.repoFullName.split("/");
-
-      // Calculate the date threshold
-      const since = new Date();
-      since.setDate(since.getDate() - args.timeWindow);
-
-      // Get commits in the time window
-      const commits: any[] = [];
-      let page = 1;
-      let hasMore = true;
-
-      while (hasMore && page <= 10) { // Limit to 10 pages to avoid rate limits
-        const { data } = await octokit.repos.listCommits({
-          owner,
-          repo,
-          sha: args.ref,
-          since: since.toISOString(),
-          per_page: 100,
-          page,
-        });
-
-        if (data.length === 0) {
-          hasMore = false;
-        } else {
-          commits.push(...data);
-          // Check if the oldest commit is still within the time window
-          const oldestCommit = data[data.length - 1];
-          if (oldestCommit.commit.author?.date && new Date(oldestCommit.commit.author.date) < since) {
-            hasMore = false;
-          } else {
-            page++;
-          }
-        }
-      }
-
-      // Analyze file changes
-      type FileStats = {
-        changeCount: number;
-        churn: number;
-        authors: Set<string>;
-        lastModified: string;
-        commits: string[];
-      }
-      const fileStats = new Map<string, FileStats>();
-
-      for (const commit of commits) {
-        try {
-          const { data: commitData } = await octokit.repos.getCommit({
-            owner,
-            repo,
-            ref: commit.sha,
-          });
-
-          const commitDate = commitData.commit.author?.date || commit.commit.author?.date || new Date().toISOString();
-
-          for (const file of commitData.files || []) {
-            if (!file.filename) continue;
-
-            let stats = fileStats.get(file.filename);
-            if (!stats) {
-              stats = {
-                changeCount: 0,
-                churn: 0,
-                authors: new Set<string>(),
-                lastModified: commitDate,
-                commits: [] as string[],
-              };
-              fileStats.set(file.filename, stats);
-            }
-
-            stats.changeCount++;
-            stats.churn += (file.additions || 0) + (file.deletions || 0);
-            if (commitData.commit.author?.name) {
-              stats.authors.add(commitData.commit.author.name);
-            }
-            if (new Date(commitDate) > new Date(stats.lastModified)) {
-              stats.lastModified = commitDate;
-            }
-            stats.commits.push(String(commit.sha));
-          }
-        } catch (err) {
-          // Skip commits that fail to load
-          console.error(`Failed to load commit ${commit.sha}:`, err);
-        }
-      }
-
-      // Calculate hotspot scores
-      const now = new Date();
-      const files = Array.from(fileStats.entries()).map(([path, stats]) => {
-        // Recency score: more recent changes = higher score
-        const daysSinceLastChange = (now.getTime() - new Date(stats.lastModified).getTime()) / (1000 * 60 * 60 * 24);
-        const recencyScore = Math.max(0, 100 - (daysSinceLastChange / args.timeWindow) * 100);
-
-        // Hotspot score: combination of change count, churn, author count, and recency
-        const changeScore = Math.min(100, (stats.changeCount / 20) * 100); // Normalize to 100
-        const churnScore = Math.min(100, (stats.churn / 1000) * 100); // Normalize to 100
-        const authorScore = Math.min(100, (stats.authors.size / 5) * 100); // Normalize to 100
-
-        const hotspotScore = (changeScore * 0.3 + churnScore * 0.3 + authorScore * 0.2 + recencyScore * 0.2);
-
-        return {
-          path,
-          changeCount: stats.changeCount,
-          churn: stats.churn,
-          recencyScore,
-          authorCount: stats.authors.size,
-          hotspotScore,
-          lastModified: stats.lastModified,
-          commits: stats.commits.slice(0, 10), // Limit to 10 commits
-        };
-      });
-
-      // Sort by hotspot score
-      files.sort((a, b) => b.hotspotScore - a.hotspotScore);
-
-      return {
-        repo: args.repoFullName,
-        ref: args.ref,
-        timeWindow: args.timeWindow,
-        analyzedAt: new Date().toISOString(),
-        files,
-      };
-    } catch (error: any) {
-      console.error("Failed to analyze hotspots:", error.message);
-      return { files: [], repo: args.repoFullName, ref: args.ref, timeWindow: args.timeWindow, analyzedAt: new Date().toISOString() };
     }
   },
 });

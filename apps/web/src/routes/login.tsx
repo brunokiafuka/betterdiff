@@ -13,11 +13,8 @@ function AuthenticatedRedirect() {
 
   useEffect(() => {
     track('login_succeeded', { surface: 'web' })
-    // After a successful login, honour any explicit redirect the app asked for.
-    const redirectPath = sessionStorage.getItem('authRedirect') || '/repos'
-    sessionStorage.removeItem('authRedirect')
-    // Use replace to avoid adding an extra entry to history
-    navigate({ to: redirectPath as any, replace: true })
+    // Use replace to avoid adding to history
+    navigate({ to: '/repos', replace: true })
   }, [navigate])
 
   return null
@@ -83,7 +80,12 @@ export function LoginRoute() {
         </div>
       </Unauthenticated>
       <AuthLoading>
-        <div />
+        <div className="auth-page">
+          <div className="auth-loading">
+            <div className="spinner"></div>
+            <p>Checking authentication...</p>
+          </div>
+        </div>
       </AuthLoading>
     </>
   )

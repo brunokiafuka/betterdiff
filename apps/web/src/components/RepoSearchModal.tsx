@@ -24,22 +24,22 @@ export const RepoSearchModal: React.FC<RepoSearchModalProps> = ({
 
   // Filter repos based on search query
   const filteredRepos = searchQuery
-    ? repos.filter(repo =>
-      repo.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      repo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      repo.owner.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    ? repos.filter(repo => 
+        repo.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        repo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        repo.owner.toLowerCase().includes(searchQuery.toLowerCase())
+      )
     : repos
 
   // Combine recent and filtered, removing duplicates
   const displayRepos = searchQuery
     ? filteredRepos
     : [
-      ...recentRepos,
-      ...filteredRepos.filter(r =>
-        !recentRepos.some(rr => r.fullName === rr.fullName)
-      )
-    ]
+        ...recentRepos,
+        ...filteredRepos.filter(r => 
+          !recentRepos.some(rr => r.fullName === rr.fullName)
+        )
+      ]
 
   useEffect(() => {
     // Focus search input when modal opens

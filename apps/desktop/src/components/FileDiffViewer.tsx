@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { DiffEditor, Editor } from '@monaco-editor/react'
 import { Info } from 'lucide-react'
+import { useUiStore } from '../stores/uiStore'
 import './FileDiffViewer.css'
 
 interface FileDiffViewerProps {
@@ -20,6 +21,7 @@ export const FileDiffViewer: React.FC<FileDiffViewerProps> = ({
   repo,
   onDetailsClick
 }) => {
+  const { startAction, finishAction, failAction, addToast } = useUiStore()
   const [oldContent, setOldContent] = useState('')
   const [newContent, setNewContent] = useState('')
   const [loading, setLoading] = useState(false)
@@ -31,6 +33,7 @@ export const FileDiffViewer: React.FC<FileDiffViewerProps> = ({
 
     const loadFileContents = async () => {
       setLoading(true)
+      startAction('loadFileContents', 'Loading file contents...')
       try {
         const isLocal = repo?.type === 'local'
         if (baseSha === headSha) {
@@ -57,13 +60,16 @@ export const FileDiffViewer: React.FC<FileDiffViewerProps> = ({
         console.error('Failed to load file contents:', error)
         setOldContent('// Failed to load content')
         setNewContent('// Failed to load content')
+        failAction('loadFileContents', 'Failed to load file contents')
+        addToast('error', 'Failed to load file contents')
       } finally {
         setLoading(false)
+        finishAction('loadFileContents')
       }
     }
 
     loadFileContents()
-  }, [baseSha, headSha, repoFullName, filePath])
+  }, [baseSha, headSha, repoFullName, filePath, repo, startAction, finishAction, failAction, addToast])
 
   // Detect language from file extension
   const getLanguage = (path: string) => {

@@ -1,8 +1,7 @@
 import { useEffect } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { Authenticated, Unauthenticated, useQuery } from 'convex/react'
-import { GitBranch, GitCommit, FileCode, Github, } from 'lucide-react'
-import { api } from '../../convex/_generated/api'
+import { Authenticated } from 'convex/react'
+import { GitBranch, GitCommit, FileCode, Github, ArrowRight } from 'lucide-react'
 import iconImage from '../assets/icon.png'
 import diffImage from '../assets/diff.png'
 import './Landing.css'
@@ -13,53 +12,13 @@ function AuthenticatedRedirect() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    // Only redirect if this navigation was triggered by an auth flow.
-    // We detect that via a stored redirect path set before calling signIn().
-    const redirectPath = sessionStorage.getItem('authRedirect')
-    if (!redirectPath) {
-      // No pending auth redirect – user likely just visited `/` directly,
-      // so keep them on the marketing page instead of forcing `/repos`.
-      return
-    }
-
+    // Check if there's a stored redirect path from login
+    const redirectPath = sessionStorage.getItem('authRedirect') || '/repos'
     sessionStorage.removeItem('authRedirect')
     navigate({ to: redirectPath as any, replace: true })
   }, [navigate])
 
   return null
-}
-
-function LandingUserNav() {
-  const currentUser = useQuery(api.auth.getCurrentUser)
-
-  if (!currentUser) {
-    return null
-  }
-
-  const displayName =
-    currentUser.username ||
-    currentUser.email ||
-    'Your repos'
-
-  const initial =
-    (currentUser.username || currentUser.email || 'U').charAt(0).toUpperCase()
-
-  return (
-    <Link to="/repos" className="landing-nav-cta landing-nav-user">
-      {currentUser.image ? (
-        <img
-          src={currentUser.image}
-          alt={displayName}
-          className="landing-nav-user-avatar"
-        />
-      ) : (
-        <div className="landing-nav-user-avatar placeholder">
-          {initial}
-        </div>
-      )}
-      <code className="landing-nav-user-name">@{displayName}</code>
-    </Link>
-  )
 }
 
 export function IndexRoute() {
@@ -112,14 +71,9 @@ export function IndexRoute() {
                 <Github size={16} style={{ marginRight: 6 }} />
                 GitHub
               </a>
-              <Authenticated>
-                <LandingUserNav />
-              </Authenticated>
-              <Unauthenticated>
-                <Link to="/login" className="landing-nav-cta">
-                  Get Started
-                </Link>
-              </Unauthenticated>
+              <Link to="/login" className="landing-nav-cta">
+                Get Started
+              </Link>
             </div>
           </div>
         </nav>

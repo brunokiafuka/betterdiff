@@ -48,44 +48,125 @@ function createWindow() {
 }
 
 function createMenu() {
-  const template: Electron.MenuItemConstructorOptions[] = [
+  const fileSubmenu: Electron.MenuItemConstructorOptions[] = [
     {
-      label: "File",
+      label: "Settings",
+      accelerator: "CmdOrCtrl+,",
+      click: () => {
+        if (mainWindow) {
+          mainWindow.webContents.send("menu:open-settings");
+        }
+      },
+    },
+    { type: "separator" },
+    {
+      label: "Open",
       submenu: [
         {
-          label: "Settings",
-          accelerator: "CmdOrCtrl+,",
+          label: "Remote Repository...",
+          accelerator: "CmdOrCtrl+O",
           click: () => {
             if (mainWindow) {
-              mainWindow.webContents.send("menu:open-settings");
+              mainWindow.webContents.send("menu:open-remote-repo");
             }
           },
         },
-        { type: "separator" },
         {
-          label: "Open",
-          submenu: [
-            {
-              label: "Remote Repository...",
-              accelerator: "CmdOrCtrl+O",
-              click: () => {
-                if (mainWindow) {
-                  mainWindow.webContents.send("menu:open-remote-repo");
-                }
-              },
-            },
-            {
-              label: "Local Repository...",
-              accelerator: "CmdOrCtrl+Shift+O",
-              click: () => {
-                if (mainWindow) {
-                  mainWindow.webContents.send("menu:open-local-repo");
-                }
-              },
-            },
-          ],
+          label: "Local Repository...",
+          accelerator: "CmdOrCtrl+Shift+O",
+          click: () => {
+            if (mainWindow) {
+              mainWindow.webContents.send("menu:open-local-repo");
+            }
+          },
         },
       ],
+    },
+    { type: "separator" },
+    { role: "close" },
+  ];
+
+  const macAppSubmenu: Electron.MenuItemConstructorOptions[] = [
+    { role: "about" },
+    { type: "separator" },
+    { role: "services" },
+    { type: "separator" },
+    {
+      label: "Settings",
+      accelerator: "CmdOrCtrl+,",
+      click: () => {
+        if (mainWindow) {
+          mainWindow.webContents.send("menu:open-settings");
+        }
+      },
+    },
+    { type: "separator" },
+    { role: "hide" },
+    { role: "hideOthers" },
+    { role: "unhide" },
+    { type: "separator" },
+    { role: "quit" },
+  ];
+
+  const viewSubmenu: Electron.MenuItemConstructorOptions[] = [
+    { role: "reload" },
+    { role: "forceReload" },
+    { role: "toggleDevTools" },
+    { type: "separator" },
+    { role: "resetZoom" },
+    { role: "zoomIn" },
+    { role: "zoomOut" },
+    { type: "separator" },
+    { role: "togglefullscreen" },
+  ];
+
+  const windowSubmenu: Electron.MenuItemConstructorOptions[] = [
+    { role: "minimize" },
+    { role: "zoom" },
+    { role: "close" },
+  ];
+
+  const helpSubmenu: Electron.MenuItemConstructorOptions[] = [
+    {
+      label: "About BetterDiff",
+      click: () => {
+        if (mainWindow) {
+          dialog.showMessageBox(mainWindow, {
+            type: "info",
+            title: "About BetterDiff",
+            message: "BetterDiff",
+            detail: "Diff and code exploration for GitHub and local repos.",
+          });
+        }
+      },
+    },
+  ];
+
+  const template: Electron.MenuItemConstructorOptions[] = [
+    ...(process.platform === "darwin"
+      ? [
+          {
+            label: app.name,
+            submenu: macAppSubmenu,
+          },
+        ]
+      : []),
+    {
+      label: "File",
+      submenu: fileSubmenu,
+    },
+    {
+      label: "View",
+      submenu: viewSubmenu,
+    },
+    {
+      label: "Window",
+      role: "window",
+      submenu: windowSubmenu,
+    },
+    {
+      role: "help",
+      submenu: helpSubmenu,
     },
   ];
 
@@ -101,7 +182,7 @@ app.whenReady().then(() => {
     octokit = new Octokit({ auth: config.githubToken });
   }
 
-  // createMenu()
+  createMenu();
   createWindow();
 
   app.on("activate", () => {
