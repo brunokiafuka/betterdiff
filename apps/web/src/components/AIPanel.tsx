@@ -62,10 +62,10 @@ export const AIPanel: React.FC<AIPanelProps> = ({
 }) => {
   const chatWithAI = useChatWithAI()
   const clearConversation = useClearConversation()
-  
+
   // Generate conversation ID based on commits
   const conversationId = `${repoFullName}-${baseSha}-${headSha}`
-  
+
   // In-memory conversation state
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -109,10 +109,9 @@ export const AIPanel: React.FC<AIPanelProps> = ({
 
       if (result.success && result.response) {
         setStatus('streaming')
-        // Simulate streaming effect by revealing characters
         const fullText = result.response
         let currentIndex = 0
-        
+
         const streamInterval = setInterval(() => {
           if (currentIndex < fullText.length) {
             // Stream in chunks of 5 characters for smoother effect
@@ -121,7 +120,7 @@ export const AIPanel: React.FC<AIPanelProps> = ({
             currentIndex += chunkSize
           } else {
             clearInterval(streamInterval)
-            
+
             // Add complete message
             const assistantMessage: ChatMessage = {
               id: (Date.now() + 1).toString(),
@@ -133,11 +132,11 @@ export const AIPanel: React.FC<AIPanelProps> = ({
             setStreamingContent('')
             setStatus('ready')
           }
-        }, 20) // Adjust speed here
+        }, 20)
       } else {
         setStatus('error')
         setStreamingContent('')
-        // Show error message
+
         const errorMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
@@ -151,7 +150,7 @@ export const AIPanel: React.FC<AIPanelProps> = ({
       console.error('Chat error:', error)
       setStatus('error')
       setStreamingContent('')
-      
+
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -224,25 +223,25 @@ export const AIPanel: React.FC<AIPanelProps> = ({
               description="Ask me anything about these code changes:"
             >
               <div className="flex flex-col gap-2 mt-4 w-full max-w-sm">
-                <button 
+                <button
                   onClick={() => handleSuggestionClick('What are the main changes in this diff?')}
                   className="px-3 py-2 text-sm text-left rounded-md bg-secondary text-secondary-foreground hover:bg-accent transition-colors"
                 >
                   What are the main changes?
                 </button>
-                <button 
+                <button
                   onClick={() => handleSuggestionClick('Are there any potential bugs or issues?')}
                   className="px-3 py-2 text-sm text-left rounded-md bg-secondary text-secondary-foreground hover:bg-accent transition-colors"
                 >
                   Potential bugs?
                 </button>
-                <button 
+                <button
                   onClick={() => handleSuggestionClick('What tests should I run?')}
                   className="px-3 py-2 text-sm text-left rounded-md bg-secondary text-secondary-foreground hover:bg-accent transition-colors"
                 >
                   What tests to run?
                 </button>
-                <button 
+                <button
                   onClick={() => handleSuggestionClick('Explain the impact of these changes')}
                   className="px-3 py-2 text-sm text-left rounded-md bg-secondary text-secondary-foreground hover:bg-accent transition-colors"
                 >
@@ -259,8 +258,8 @@ export const AIPanel: React.FC<AIPanelProps> = ({
               </MessageContent>
               {message.role === 'assistant' && index === messages.length - 1 && (
                 <MessageActions>
-                  <MessageAction 
-                    onClick={() => copyToClipboard(message.content)} 
+                  <MessageAction
+                    onClick={() => copyToClipboard(message.content)}
                     label="Copy"
                     tooltip="Copy to clipboard"
                   >
@@ -294,7 +293,7 @@ export const AIPanel: React.FC<AIPanelProps> = ({
       {/* Input */}
       <div className="border-t border-border p-4">
         <PromptInput onSubmit={handleSubmit}>
-          <PromptInputTextarea 
+          <PromptInputTextarea
             value={input}
             onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setInput(e.currentTarget.value)}
             placeholder="Ask about these changes..."
@@ -315,7 +314,7 @@ export const AIPanel: React.FC<AIPanelProps> = ({
                 </PromptInputSelectContent>
               </PromptInputSelect>
             </PromptInputTools>
-            <PromptInputSubmit 
+            <PromptInputSubmit
               status={status === 'submitted' || status === 'streaming' ? 'streaming' : 'ready'}
               disabled={!input.trim() || status === 'submitted' || status === 'streaming'}
             />

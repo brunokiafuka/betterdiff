@@ -211,6 +211,7 @@ export const FileExplorerView: React.FC<FileExplorerViewProps> = ({
         repoFullName={repo.fullName}
         baseSha={selectedCommits?.base || null}
         headSha={selectedCommits?.head || null}
+        selectedFilePath={selectedFilePath}
         activeTab={activePanelTab}
         onTabChange={(tab) => setActivePanelTab(tab === activePanelTab ? null : tab)}
       />

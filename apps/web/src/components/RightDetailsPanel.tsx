@@ -10,6 +10,7 @@ interface RightDetailsPanelProps {
   repoFullName: string
   baseSha: string | null
   headSha: string | null
+  selectedFilePath?: string | null
   activeTab: PanelTab | null
   onTabChange: (tab: PanelTab | null) => void
 }
@@ -18,6 +19,7 @@ export const RightDetailsPanel: React.FC<RightDetailsPanelProps> = ({
   repoFullName,
   baseSha,
   headSha,
+  selectedFilePath,
   activeTab,
   onTabChange,
 }) => {
@@ -74,7 +76,14 @@ export const RightDetailsPanel: React.FC<RightDetailsPanelProps> = ({
               />
             )}
             {activeTab === 'hotspot' && <HotspotPanel />}
-            {activeTab === 'ai' && <AIPanel />}
+            {activeTab === 'ai' && (
+              <AIPanel
+                repoFullName={repoFullName}
+                baseSha={baseSha}
+                headSha={headSha}
+                selectedFilePath={selectedFilePath}
+              />
+            )}
           </div>
         </div>
       )}
