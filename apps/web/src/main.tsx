@@ -14,9 +14,7 @@ const posthogHost = import.meta.env.VITE_POSTHOG_HOST || ''
 
 const posthogOptions = {
   api_host: posthogHost,
-  autocapture: false,
-  capture_pageview: false,
-  disable_session_recording: true,
+  defaults: '2025-11-30',
 } as const
 
 if (!convexUrl) {
