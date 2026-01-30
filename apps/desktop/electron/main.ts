@@ -18,8 +18,8 @@ let octokit: Octokit | null = null;
 
 let mainWindow: BrowserWindow | null = null;
 
-function createWindow() {
-  mainWindow = new BrowserWindow({
+function createWindow(options?: { initialRepoPath?: string; setAsMain?: boolean }) {
+  const window = new BrowserWindow({
     width: 1600,
     height: 1000,
     minWidth: 1200,
@@ -34,17 +34,35 @@ function createWindow() {
     },
   });
 
-  // Load app
-  if (process.env.NODE_ENV === "development") {
-    mainWindow.loadURL("http://localhost:5173");
-    mainWindow.webContents.openDevTools();
-  } else {
-    mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
+  const setAsMain = options?.setAsMain ?? true;
+  if (setAsMain) {
+    mainWindow = window;
   }
 
-  mainWindow.on("closed", () => {
-    mainWindow = null;
+  // Load app
+  if (process.env.NODE_ENV === "development") {
+    window.loadURL("http://localhost:5173");
+    window.webContents.openDevTools();
+  } else {
+    window.loadFile(path.join(__dirname, "../dist/index.html"));
+  }
+
+  window.on("closed", () => {
+    if (window === mainWindow) {
+      mainWindow = null;
+    }
   });
+
+  if (options?.initialRepoPath) {
+    window.webContents.on("did-finish-load", () => {
+      window.webContents.send(
+        "app:open-local-repo-path",
+        options.initialRepoPath,
+      );
+    });
+  }
+
+  return window;
 }
 
 function createMenu() {
@@ -183,11 +201,11 @@ app.whenReady().then(() => {
   }
 
   createMenu();
-  createWindow();
+  createWindow({ setAsMain: true });
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
+      createWindow({ setAsMain: true });
     }
   });
 });
@@ -548,6 +566,43 @@ function isGitRepo(repoPath: string): boolean {
   return fs.existsSync(path.join(repoPath, ".git"));
 }
 
+function getLocalRepoInfo(selectedPath: string) {
+  // Get repo info
+  const name = path.basename(selectedPath);
+  const defaultBranch =
+    execGitCommand(selectedPath, "symbolic-ref --short HEAD") || "main";
+  let remoteUrl = "";
+  try {
+    remoteUrl = execGitCommand(
+      selectedPath,
+      "config --get remote.origin.url",
+    );
+  } catch (e) {
+    // No remote configured
+  }
+
+  // Try to extract owner from remote URL if available
+  let owner = "local";
+  if (remoteUrl) {
+    const match = remoteUrl.match(
+      /(?:github\.com[/:]|git@github\.com:)([^/]+)\/([^/]+?)(?:\.git)?$/,
+    );
+    if (match) {
+      owner = match[1];
+    }
+  }
+
+  return {
+    id: `local-${selectedPath}`,
+    owner,
+    name,
+    fullName: `${owner}/${name}`,
+    defaultBranch,
+    type: "local" as const,
+    localPath: selectedPath,
+  };
+}
+
 // IPC handlers for local repositories
 ipcMain.handle("local:selectFolder", async () => {
   const result = await dialog.showOpenDialog(mainWindow!, {
@@ -566,43 +621,37 @@ ipcMain.handle("local:selectFolder", async () => {
   }
 
   try {
-    // Get repo info
-    const name = path.basename(selectedPath);
-    const defaultBranch =
-      execGitCommand(selectedPath, "symbolic-ref --short HEAD") || "main";
-    let remoteUrl = "";
-    try {
-      remoteUrl = execGitCommand(
-        selectedPath,
-        "config --get remote.origin.url",
-      );
-    } catch (e) {
-      // No remote configured
-    }
-
-    // Try to extract owner from remote URL if available
-    let owner = "local";
-    if (remoteUrl) {
-      const match = remoteUrl.match(
-        /(?:github\.com[/:]|git@github\.com:)([^/]+)\/([^/]+?)(?:\.git)?$/,
-      );
-      if (match) {
-        owner = match[1];
-      }
-    }
-
-    return {
-      id: `local-${selectedPath}`,
-      owner,
-      name,
-      fullName: `${owner}/${name}`,
-      defaultBranch,
-      type: "local" as const,
-      localPath: selectedPath,
-    };
+    return getLocalRepoInfo(selectedPath);
   } catch (error: any) {
     throw new Error(`Failed to read repository: ${error.message}`);
   }
+});
+
+ipcMain.handle("local:getRepoInfo", async (_event, repoPath: string) => {
+  console.log("[app] local:getRepoInfo", { repoPath });
+  if (!repoPath) {
+    throw new Error("Repository path is required");
+  }
+  if (!isGitRepo(repoPath)) {
+    throw new Error("Selected folder is not a git repository");
+  }
+  try {
+    return getLocalRepoInfo(repoPath);
+  } catch (error: any) {
+    throw new Error(`Failed to read repository: ${error.message}`);
+  }
+});
+
+ipcMain.handle("app:openRepoInNewWindow", async (_event, repoPath: string) => {
+  console.log("[app] openRepoInNewWindow", { repoPath });
+  if (!repoPath) {
+    throw new Error("Repository path is required");
+  }
+  if (!isGitRepo(repoPath)) {
+    throw new Error("Selected folder is not a git repository");
+  }
+  createWindow({ initialRepoPath: repoPath, setAsMain: false });
+  return { success: true };
 });
 
 ipcMain.handle("local:selectFolderPath", async () => {

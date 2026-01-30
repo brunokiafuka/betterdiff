@@ -31,6 +31,7 @@ export const WorktreesPanel: React.FC<WorktreesPanelProps> = ({ onClose }) => {
   } | null>(null)
   const [verifyInput, setVerifyInput] = useState('')
   const verifyResolver = useRef<((value: boolean) => void) | null>(null)
+  const [openWorktreeModal, setOpenWorktreeModal] = useState<WorktreeInfo | null>(null)
   const [worktreeForm, setWorktreeForm] = useState<WorktreeAddOptions>({
     path: '',
     branch: '',
@@ -53,6 +54,14 @@ export const WorktreesPanel: React.FC<WorktreesPanelProps> = ({ onClose }) => {
     const trimmed = value.trim()
     if (!trimmed) return ''
     return trimmed.startsWith('refs/heads/') ? trimmed.slice('refs/heads/'.length) : trimmed
+  }
+  const normalizeRepoPath = (value?: string | null) => {
+    if (!value) return ''
+    const trimmed = value.trim().replace(/[\\\/]+$/, '')
+    if (!trimmed) return ''
+    return navigator.userAgent.toLowerCase().includes('windows')
+      ? trimmed.toLowerCase()
+      : trimmed
   }
   const requestVerify = (params: {
     title: string
@@ -333,6 +342,35 @@ export const WorktreesPanel: React.FC<WorktreesPanelProps> = ({ onClose }) => {
     }
   }
 
+  const handleOpenWorktreeHere = (worktreePath: string) => {
+    console.log('[Worktrees] Open in same window', { worktreePath })
+    window.dispatchEvent(
+      new CustomEvent('app:open-local-repo-path', { detail: worktreePath })
+    )
+    setOpenWorktreeModal(null)
+  }
+
+  const handleOpenWorktreeNewWindow = async (worktreePath: string) => {
+    startAction('openWorktreeWindow', 'Opening worktree...')
+    try {
+      console.log('[Worktrees] Open in new window', { worktreePath })
+      if (!window.electronAPI?.app?.openRepoInNewWindow) {
+        console.warn('[Worktrees] openRepoInNewWindow API not available')
+        throw new Error('Opening a new window is not available')
+      }
+      await window.electronAPI.app.openRepoInNewWindow(worktreePath)
+      addToast('success', 'Worktree opened in new window')
+      setOpenWorktreeModal(null)
+    } catch (err: any) {
+      const message = err.message || 'Failed to open worktree'
+      console.error('[Worktrees] Failed to open new window', err)
+      addToast('error', message)
+      failAction('openWorktreeWindow', message)
+    } finally {
+      finishAction('openWorktreeWindow')
+    }
+  }
+
   return (
     <div className="worktrees-panel">
       <div className="worktrees-header">
@@ -384,7 +422,10 @@ export const WorktreesPanel: React.FC<WorktreesPanelProps> = ({ onClose }) => {
         </div>
       ) : (
         <div className="worktrees-list">
-          {worktrees.map((worktree) => (
+          {worktrees.map((worktree) => {
+            const isCurrentWorktree =
+              normalizeRepoPath(worktree.path) === normalizeRepoPath(currentRepo?.localPath || '')
+            return (
             <div key={worktree.path} className="worktree-row">
               <div className="worktree-main">
                 <div className="worktree-path">{worktree.path}</div>
@@ -396,6 +437,18 @@ export const WorktreesPanel: React.FC<WorktreesPanelProps> = ({ onClose }) => {
                 </div>
               </div>
               <div className="worktree-actions">
+                <button
+                  className="worktree-btn"
+                  onClick={() => {
+                    if (!isCurrentWorktree) {
+                      setOpenWorktreeModal(worktree)
+                    }
+                  }}
+                  disabled={isCurrentWorktree}
+                  title={isCurrentWorktree ? 'Already open' : 'Open'}
+                >
+                  {isCurrentWorktree ? 'Current' : 'Open'}
+                </button>
                 <button
                   className="worktree-btn"
                   onClick={() => handleToggleLock(worktree)}
@@ -412,7 +465,8 @@ export const WorktreesPanel: React.FC<WorktreesPanelProps> = ({ onClose }) => {
                 )}
               </div>
             </div>
-          ))}
+            )
+          })}
 
           {worktrees.length === 0 && canManageWorktrees && (
             <div className="worktrees-empty">No worktrees found.</div>
@@ -695,6 +749,46 @@ export const WorktreesPanel: React.FC<WorktreesPanelProps> = ({ onClose }) => {
                 disabled={verifyInput.trim() !== verifyModal.expected}
               >
                 {verifyModal.confirmLabel || 'Confirm'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {openWorktreeModal && (
+        <div className="worktree-modal-backdrop">
+          <div className="worktree-modal">
+            <div className="worktree-modal-header">
+              <h3>Open Worktree</h3>
+              <button
+                className="worktree-icon-btn"
+                onClick={() => setOpenWorktreeModal(null)}
+                title="Close"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <div className="worktree-modal-body">
+              <p>Open this worktree in the same window or a new window?</p>
+              <div className="worktree-form-group">
+                <div className="worktree-path">{openWorktreeModal.path}</div>
+              </div>
+            </div>
+            <div className="worktree-modal-actions">
+              <button className="worktree-btn" onClick={() => setOpenWorktreeModal(null)}>
+                Cancel
+              </button>
+              <button
+                className="worktree-btn"
+                onClick={() => handleOpenWorktreeHere(openWorktreeModal.path)}
+              >
+                Same Window
+              </button>
+              <button
+                className="worktree-btn primary"
+                onClick={() => handleOpenWorktreeNewWindow(openWorktreeModal.path)}
+              >
+                New Window
               </button>
             </div>
           </div>

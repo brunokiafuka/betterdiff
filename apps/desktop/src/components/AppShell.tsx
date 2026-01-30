@@ -20,6 +20,15 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
   const [openingLocalRepo, setOpeningLocalRepo] = useState(false)
   const { startAction, finishAction, failAction, addToast } = useUiStore()
 
+  const normalizeRepoPath = useCallback((value?: string | null) => {
+    if (!value) return ''
+    const trimmed = value.trim().replace(/[\\\/]+$/, '')
+    if (!trimmed) return ''
+    return navigator.userAgent.toLowerCase().includes('windows')
+      ? trimmed.toLowerCase()
+      : trimmed
+  }, [])
+
   // Keyboard shortcut: Cmd+A to open AI panel
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -35,19 +44,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [currentRepo])
 
-  const handleSelectLocalRepo = useCallback(async () => {
-    if (openingLocalRepo) {
-      return
-    }
-    setOpeningLocalRepo(true)
-    startAction('openLocalRepo', 'Opening local repository...')
-    try {
-      const repo = await window.electronAPI.local.selectFolder()
-      if (!repo) {
-        finishAction('openLocalRepo')
-        return
-      }
-
+  const applyLocalRepo = useCallback(
+    async (repo: any) => {
       if (!repo.type) {
         repo.type = 'local'
       }
@@ -55,7 +53,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
       setRepo(repo)
 
       try {
-        const config = await window.electronAPI.config.read() || {}
+        const config = (await window.electronAPI.config.read()) || {}
         const recent = config.recentRepos || []
         const filtered = recent.filter((r: any) =>
           r.type === 'local'
@@ -76,6 +74,60 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
           branches[0]
         setRefs(currentBranch, currentBranch)
       }
+    },
+    [setRepo, setRefs]
+  )
+
+  const openLocalRepoFromPath = useCallback(
+    async (repoPath: string) => {
+      if (!repoPath || openingLocalRepo) {
+        console.log('[AppShell] openLocalRepoFromPath skipped', { repoPath, openingLocalRepo })
+        return
+      }
+      const normalizedTarget = normalizeRepoPath(repoPath)
+      const normalizedCurrent = normalizeRepoPath(currentRepo?.localPath || '')
+      if (normalizedTarget && normalizedTarget === normalizedCurrent) {
+        addToast('info', 'This worktree is already open')
+        return
+      }
+      console.log('[AppShell] openLocalRepoFromPath start', { repoPath })
+      setOpeningLocalRepo(true)
+      startAction('openLocalRepo', 'Opening local repository...')
+      try {
+        const repo = await window.electronAPI.local.getRepoInfo(repoPath)
+        if (!repo) {
+          console.warn('[AppShell] getRepoInfo returned empty', { repoPath })
+          finishAction('openLocalRepo')
+          return
+        }
+        await applyLocalRepo(repo)
+        addToast('success', `Opened ${repo.fullName}`)
+        console.log('[AppShell] openLocalRepoFromPath success', { repoPath })
+      } catch (err) {
+        console.error('[AppShell] Failed to open local repo', err)
+        failAction('openLocalRepo', 'Failed to open local repository')
+        addToast('error', 'Failed to open local repository')
+      } finally {
+        setOpeningLocalRepo(false)
+        finishAction('openLocalRepo')
+      }
+    },
+    [openingLocalRepo, startAction, finishAction, failAction, addToast, applyLocalRepo]
+  )
+
+  const handleSelectLocalRepo = useCallback(async () => {
+    if (openingLocalRepo) {
+      return
+    }
+    setOpeningLocalRepo(true)
+    startAction('openLocalRepo', 'Opening local repository...')
+    try {
+      const repo = await window.electronAPI.local.selectFolder()
+      if (!repo) {
+        finishAction('openLocalRepo')
+        return
+      }
+      await applyLocalRepo(repo)
     } catch (err) {
       console.error('Failed to select local repo:', err)
       failAction('openLocalRepo', 'Failed to open local repository')
@@ -84,7 +136,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
       setOpeningLocalRepo(false)
       finishAction('openLocalRepo')
     }
-  }, [openingLocalRepo, setRepo, setRefs, startAction, finishAction, failAction, addToast])
+  }, [openingLocalRepo, startAction, finishAction, failAction, addToast, applyLocalRepo])
 
   // Listen for menu events to open repo modal or local picker
   useEffect(() => {
@@ -99,6 +151,26 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
       window.removeEventListener('menu:open-local-repo', handleSelectLocalRepo)
     }
   }, [handleSelectLocalRepo])
+
+  useEffect(() => {
+    const handleOpenLocalRepoPath = (event: Event) => {
+      const detail = (event as CustomEvent<string>).detail
+      if (detail) {
+        void openLocalRepoFromPath(detail)
+      }
+    }
+    window.addEventListener('app:open-local-repo-path', handleOpenLocalRepoPath as EventListener)
+    const dispose =
+      window.electronAPI.app?.onAppAction?.('open-local-repo-path', (repoPath: string) => {
+        if (repoPath) {
+          void openLocalRepoFromPath(repoPath)
+        }
+      }) || null
+    return () => {
+      window.removeEventListener('app:open-local-repo-path', handleOpenLocalRepoPath as EventListener)
+      if (dispose) dispose()
+    }
+  }, [openLocalRepoFromPath])
 
   useEffect(() => {
     const loadRepos = async () => {

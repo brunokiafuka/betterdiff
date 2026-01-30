@@ -38,6 +38,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Local repositories
   local: {
     selectFolder: () => ipcRenderer.invoke('local:selectFolder'),
+    getRepoInfo: (repoPath: string) => ipcRenderer.invoke('local:getRepoInfo', repoPath),
     selectFolderPath: () => ipcRenderer.invoke('local:selectFolderPath'),
     pathExists: (targetPath: string) => ipcRenderer.invoke('local:pathExists', targetPath),
     removeFolder: (targetPath: string) => ipcRenderer.invoke('local:removeFolder', targetPath),
@@ -88,6 +89,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onMenuAction: (action: string, callback: () => void) => {
     ipcRenderer.on(`menu:${action}`, callback)
     return () => ipcRenderer.removeListener(`menu:${action}`, callback)
+  },
+
+  // App events
+  app: {
+    openRepoInNewWindow: (repoPath: string) =>
+      ipcRenderer.invoke('app:openRepoInNewWindow', repoPath),
+    onAppAction: (action: string, callback: (payload: any) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, payload: any) => callback(payload)
+      ipcRenderer.on(`app:${action}`, handler)
+      return () => ipcRenderer.removeListener(`app:${action}`, handler)
+    }
   }
 })
 
@@ -116,6 +128,7 @@ declare global {
       }
       local: {
         selectFolder: () => Promise<any>
+        getRepoInfo: (repoPath: string) => Promise<any>
         getStatus: (repoPath: string) => Promise<any>
         stashChanges: (repoPath: string, message?: string) => Promise<any>
         checkoutBranch: (repoPath: string, branchName: string, force?: boolean) => Promise<any>
@@ -134,6 +147,10 @@ declare global {
         analyze: (repoPath: string, ref: string, timeWindow?: number) => Promise<any>
       }
       onMenuAction: (action: string, callback: () => void) => () => void
+      app: {
+        openRepoInNewWindow: (repoPath: string) => Promise<{ success: boolean }>
+        onAppAction: (action: string, callback: (payload: any) => void) => () => void
+      }
     }
   }
 }
