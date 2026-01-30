@@ -88,3 +88,30 @@ export interface HotspotAnalysis {
   analyzedAt: string
   files: HotspotFile[]
 }
+
+export interface WorktreeInfo {
+  path: string
+  head?: string
+  branch?: string
+  detached?: boolean
+  locked?: boolean
+  lockedReason?: string
+  prunable?: boolean
+  prunableReason?: string
+  isMain?: boolean
+}
+
+export interface WorktreeAddOptions {
+  path: string
+  commit?: string
+  branch?: string
+  resetBranch?: boolean
+  detach?: boolean
+  checkout?: boolean
+  lock?: boolean
+  lockReason?: string
+  orphan?: boolean
+  force?: boolean
+  track?: boolean
+  guessRemote?: boolean
+}
