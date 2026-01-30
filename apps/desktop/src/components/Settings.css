@@ -28,6 +28,156 @@
   border-bottom: var(--border-width) solid var(--border-subtle);
 }
 
+.settings-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-lg);
+}
+
+.settings-section-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.settings-hint {
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border: var(--border-width) solid var(--border-default);
+  color: var(--text-tertiary);
+  font-size: 12px;
+  margin-top: var(--space-md);
+}
+
+.worktrees-loading {
+  padding: var(--space-xl);
+  text-align: center;
+  color: var(--text-tertiary);
+}
+
+.worktrees-list {
+  margin-top: var(--space-lg);
+  border: var(--border-width) solid var(--border-default);
+  background: var(--bg-elevated);
+}
+
+.worktree-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: var(--border-width) solid var(--border-subtle);
+}
+
+.worktree-row:last-child {
+  border-bottom: none;
+}
+
+.worktree-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.worktree-path {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.worktree-meta {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.worktree-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.worktrees-empty {
+  padding: var(--space-xl);
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.worktree-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.worktree-modal {
+  width: 520px;
+  background: var(--bg-secondary);
+  border: var(--border-width) solid var(--border-default);
+  box-shadow: var(--shadow-xl);
+}
+
+.worktree-modal-header {
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: var(--border-width) solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.worktree-modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.worktree-modal-body {
+  padding: var(--space-lg);
+}
+
+.worktree-branch-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-sm);
+}
+
+.worktree-path-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.worktree-branch-row select.token-input option {
+  background: #1a1a1a;
+  color: #ffffff;
+  padding: 10px 14px;
+}
+
+.worktree-toggle-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-sm);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.worktree-toggle-row label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.worktree-modal-actions {
+  padding: var(--space-md) var(--space-lg);
+  border-top: var(--border-width) solid var(--border-subtle);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+}
+
 .settings-header h1 {
   font-size: 28px;
   font-weight: 700;

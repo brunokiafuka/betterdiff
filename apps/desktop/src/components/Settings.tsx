@@ -44,7 +44,6 @@ export const Settings: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
     setSuccess(false)
 
     try {
-      // Test the token first
       const authResult = await window.electronAPI.github.auth(token.trim())
 
       if (!authResult.success) {
@@ -53,7 +52,6 @@ export const Settings: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
         return
       }
 
-      // Save config
       const newConfig: Config = {
         ...config,
         githubToken: token.trim()
@@ -64,7 +62,6 @@ export const Settings: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
       setSuccess(true)
       setConfig(newConfig)
 
-      // Clear success message after 2 seconds
       setTimeout(() => {
         setSuccess(false)
         if (onClose) {
