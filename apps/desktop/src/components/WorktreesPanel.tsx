@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { GitBranch, RefreshCw, Plus, X } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import { useUiStore } from '../stores/uiStore'
@@ -19,6 +19,18 @@ export const WorktreesPanel: React.FC<WorktreesPanelProps> = ({ onClose }) => {
   const [showWorktreeModal, setShowWorktreeModal] = useState(false)
   const [localBranches, setLocalBranches] = useState<{ name: string }[]>([])
   const [branchSelection, setBranchSelection] = useState('custom')
+  const [showLockModal, setShowLockModal] = useState(false)
+  const [lockReasonInput, setLockReasonInput] = useState('')
+  const [pendingLockWorktree, setPendingLockWorktree] = useState<WorktreeInfo | null>(null)
+  const [verifyModal, setVerifyModal] = useState<{
+    title: string
+    message: string
+    expected: string
+    confirmLabel?: string
+    cancelLabel?: string
+  } | null>(null)
+  const [verifyInput, setVerifyInput] = useState('')
+  const verifyResolver = useRef<((value: boolean) => void) | null>(null)
   const [worktreeForm, setWorktreeForm] = useState<WorktreeAddOptions>({
     path: '',
     branch: '',
@@ -41,6 +53,26 @@ export const WorktreesPanel: React.FC<WorktreesPanelProps> = ({ onClose }) => {
     const trimmed = value.trim()
     if (!trimmed) return ''
     return trimmed.startsWith('refs/heads/') ? trimmed.slice('refs/heads/'.length) : trimmed
+  }
+  const requestVerify = (params: {
+    title: string
+    message: string
+    expected: string
+    confirmLabel?: string
+    cancelLabel?: string
+  }) =>
+    new Promise<boolean>((resolve) => {
+      verifyResolver.current = resolve
+      setVerifyInput('')
+      setVerifyModal(params)
+    })
+  const resolveVerify = (value: boolean) => {
+    if (verifyResolver.current) {
+      verifyResolver.current(value)
+      verifyResolver.current = null
+    }
+    setVerifyModal(null)
+    setVerifyInput('')
   }
 
   const loadWorktrees = async () => {
@@ -133,9 +165,13 @@ export const WorktreesPanel: React.FC<WorktreesPanelProps> = ({ onClose }) => {
         addToast('error', 'Path exists but is not a registered worktree. Choose another path.')
         return
       }
-      const confirmRemove = window.confirm(
-        'Worktree path already exists. Remove it and try again?'
-      )
+      const confirmRemove = await requestVerify({
+        title: 'Remove Worktree?',
+        message: 'Type the worktree name to confirm removal.',
+        expected: normalizedPath.split(/[\\\/]/).filter(Boolean).pop() || normalizedPath,
+        confirmLabel: 'Remove',
+        cancelLabel: 'Cancel'
+      })
       if (!confirmRemove) return
       startAction('removeWorktree', 'Removing worktree...')
       try {
@@ -172,9 +208,13 @@ export const WorktreesPanel: React.FC<WorktreesPanelProps> = ({ onClose }) => {
     try {
       const pathExists = await window.electronAPI.local.pathExists(normalizedPath)
       if (pathExists) {
-        const confirmDelete = window.confirm(
-          'Folder already exists on disk. Remove it and continue?'
-        )
+        const confirmDelete = await requestVerify({
+          title: 'Remove Folder?',
+          message: 'Type the folder name to confirm removal.',
+          expected: normalizedPath.split(/[\\\/]/).filter(Boolean).pop() || normalizedPath,
+          confirmLabel: 'Remove',
+          cancelLabel: 'Cancel'
+        })
         if (!confirmDelete) {
           finishAction('createWorktree')
           return
@@ -212,6 +252,14 @@ export const WorktreesPanel: React.FC<WorktreesPanelProps> = ({ onClose }) => {
 
   const handleRemoveWorktree = async (worktreePath: string) => {
     if (!canManageWorktrees) return
+    const confirmRemove = await requestVerify({
+      title: 'Remove Worktree?',
+      message: 'Type the worktree name to confirm removal.',
+      expected: worktreePath.split(/[\\\/]/).filter(Boolean).pop() || worktreePath,
+      confirmLabel: 'Remove',
+      cancelLabel: 'Cancel'
+    })
+    if (!confirmRemove) return
     startAction('removeWorktree', 'Removing worktree...')
     try {
       await worktreeService.remove(currentRepo.localPath!, worktreePath)
@@ -220,9 +268,13 @@ export const WorktreesPanel: React.FC<WorktreesPanelProps> = ({ onClose }) => {
     } catch (err: any) {
       const message = err.message || ''
       if (message.includes('DIRTY_WORKTREE')) {
-        const confirmForce = window.confirm(
-          'Worktree has uncommitted changes. Force remove?'
-        )
+        const confirmForce = await requestVerify({
+          title: 'Force Remove?',
+          message: 'Type the worktree name to confirm force removal.',
+          expected: worktreePath.split(/[\\\/]/).filter(Boolean).pop() || worktreePath,
+          confirmLabel: 'Force Remove',
+          cancelLabel: 'Cancel'
+        })
         if (confirmForce) {
           await worktreeService.remove(currentRepo.localPath!, worktreePath, true)
           addToast('success', 'Worktree removed (forced)')
@@ -245,9 +297,11 @@ export const WorktreesPanel: React.FC<WorktreesPanelProps> = ({ onClose }) => {
         await worktreeService.unlock(currentRepo.localPath!, worktree.path)
         addToast('success', 'Worktree unlocked')
       } else {
-        const reason = window.prompt('Lock reason (optional):', '') || undefined
-        await worktreeService.lock(currentRepo.localPath!, worktree.path, reason)
-        addToast('success', 'Worktree locked')
+        setPendingLockWorktree(worktree)
+        setLockReasonInput('')
+        setShowLockModal(true)
+        finishAction('toggleWorktreeLock')
+        return
       }
       await loadWorktrees()
     } catch (err: any) {
@@ -256,6 +310,26 @@ export const WorktreesPanel: React.FC<WorktreesPanelProps> = ({ onClose }) => {
       failAction('toggleWorktreeLock', message)
     } finally {
       finishAction('toggleWorktreeLock')
+    }
+  }
+
+  const handleConfirmLock = async () => {
+    if (!canManageWorktrees || !pendingLockWorktree) return
+    startAction('toggleWorktreeLock', 'Updating worktree lock...')
+    try {
+      const reason = lockReasonInput.trim() || undefined
+      await worktreeService.lock(currentRepo.localPath!, pendingLockWorktree.path, reason)
+      addToast('success', 'Worktree locked')
+      await loadWorktrees()
+    } catch (err: any) {
+      const message = err.message || 'Failed to update worktree lock'
+      addToast('error', message)
+      failAction('toggleWorktreeLock', message)
+    } finally {
+      finishAction('toggleWorktreeLock')
+      setShowLockModal(false)
+      setPendingLockWorktree(null)
+      setLockReasonInput('')
     }
   }
 
@@ -531,6 +605,96 @@ export const WorktreesPanel: React.FC<WorktreesPanelProps> = ({ onClose }) => {
               </button>
               <button className="worktree-btn primary" onClick={handleCreateWorktree}>
                 Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showLockModal && pendingLockWorktree && (
+        <div className="worktree-modal-backdrop">
+          <div className="worktree-modal">
+            <div className="worktree-modal-header">
+              <h3>Lock Worktree</h3>
+              <button
+                className="worktree-icon-btn"
+                onClick={() => {
+                  setShowLockModal(false)
+                  setPendingLockWorktree(null)
+                  setLockReasonInput('')
+                }}
+                title="Close"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <div className="worktree-modal-body">
+              <div className="worktree-form-group">
+                <label>Lock Reason (optional)</label>
+                <input
+                  type="text"
+                  value={lockReasonInput}
+                  onChange={(e) => setLockReasonInput(e.target.value)}
+                  placeholder="Reason for lock"
+                  className="worktree-input"
+                />
+              </div>
+            </div>
+            <div className="worktree-modal-actions">
+              <button
+                className="worktree-btn"
+                onClick={() => {
+                  setShowLockModal(false)
+                  setPendingLockWorktree(null)
+                  setLockReasonInput('')
+                }}
+              >
+                Cancel
+              </button>
+              <button className="worktree-btn primary" onClick={handleConfirmLock}>
+                Lock
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {verifyModal && (
+        <div className="worktree-modal-backdrop">
+          <div className="worktree-modal">
+            <div className="worktree-modal-header">
+              <h3>{verifyModal.title}</h3>
+              <button
+                className="worktree-icon-btn"
+                onClick={() => resolveVerify(false)}
+                title="Close"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <div className="worktree-modal-body">
+              <p>{verifyModal.message}</p>
+              <div className="worktree-form-group">
+                <label>Type: {verifyModal.expected}</label>
+                <input
+                  type="text"
+                  value={verifyInput}
+                  onChange={(e) => setVerifyInput(e.target.value)}
+                  placeholder={verifyModal.expected}
+                  className="worktree-input"
+                />
+              </div>
+            </div>
+            <div className="worktree-modal-actions">
+              <button className="worktree-btn" onClick={() => resolveVerify(false)}>
+                {verifyModal.cancelLabel || 'Cancel'}
+              </button>
+              <button
+                className="worktree-btn primary"
+                onClick={() => resolveVerify(verifyInput.trim() === verifyModal.expected)}
+                disabled={verifyInput.trim() !== verifyModal.expected}
+              >
+                {verifyModal.confirmLabel || 'Confirm'}
               </button>
             </div>
           </div>

@@ -912,6 +912,14 @@ function normalizeBranchName(value?: string): string | undefined {
   return trimmed.startsWith(prefix) ? trimmed.slice(prefix.length) : trimmed;
 }
 
+function normalizeWorktreePath(value?: string): string | undefined {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  const normalized = path.normalize(trimmed).replace(/[\\\/]+$/, "");
+  return process.platform === "win32" ? normalized.toLowerCase() : normalized;
+}
+
 function parseWorktreeList(output: string): WorktreeInfo[] {
   if (!output) return [];
   const blocks = output.split(/\n\n+/).filter((block) => block.trim().length > 0);
@@ -1041,8 +1049,29 @@ ipcMain.handle(
     force?: boolean,
   ) => {
     try {
+      const normalizedTarget = normalizeWorktreePath(worktreePath);
+      let isLocked = false;
+      try {
+        const worktreeList = parseWorktreeList(
+          execGitCommand(repoPath, "worktree list --porcelain"),
+        );
+        const match = worktreeList.find(
+          (worktree) => normalizeWorktreePath(worktree.path) === normalizedTarget,
+        );
+        isLocked = !!match?.locked;
+      } catch (err) {
+        console.warn("Failed to check worktree lock state:", err);
+      }
+      if (isLocked && !force) {
+        throw new Error(
+          "LOCKED_WORKTREE: Worktree is locked. Use force to move.",
+        );
+      }
       const args = ["worktree", "move"];
-      if (force) args.push("-f");
+      if (force) {
+        args.push("-f");
+        if (isLocked) args.push("-f");
+      }
       args.push(shellQuote(worktreePath), shellQuote(newPath));
       execGitCommand(repoPath, args.join(" "));
       return { success: true };

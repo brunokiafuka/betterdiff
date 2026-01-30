@@ -72,7 +72,7 @@ Legend
   - Owner:
   - Priority:
   - Target date:
-- [ ] Block move if locked unless `force`.
+- [x] Block move if locked unless `force`.
   - Owner:
   - Priority:
   - Target date:
