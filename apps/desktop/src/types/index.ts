@@ -105,6 +105,7 @@ export interface WorktreeAddOptions {
   path: string
   commit?: string
   branch?: string
+  useExistingBranch?: boolean
   resetBranch?: boolean
   detach?: boolean
   checkout?: boolean

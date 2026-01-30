@@ -1,0 +1,242 @@
+ .worktrees-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-secondary);
+}
+
+.worktrees-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: var(--border-width) solid var(--border-subtle);
+  background: var(--bg-elevated);
+}
+
+.worktrees-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+}
+
+.worktrees-title h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.worktrees-header-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.worktree-icon-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-base);
+}
+
+.worktree-icon-btn:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: var(--border-default);
+  background: var(--bg-hover);
+}
+
+.worktree-icon-btn:disabled {
+  color: var(--text-quaternary);
+  cursor: not-allowed;
+}
+
+.worktrees-hint,
+.worktrees-empty {
+  padding: var(--space-lg);
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.worktrees-error {
+  margin: var(--space-md);
+  padding: var(--space-md);
+  border: var(--border-width) solid var(--error);
+  background: var(--error-bg);
+  color: var(--error);
+  font-size: 12px;
+}
+
+.worktrees-loading {
+  padding: var(--space-xl);
+  text-align: center;
+  color: var(--text-tertiary);
+}
+
+.worktrees-list {
+  overflow-y: auto;
+  padding: var(--space-md) 0;
+}
+
+.worktree-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: var(--border-width) solid var(--border-subtle);
+}
+
+.worktree-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.worktree-path {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.worktree-meta {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.worktree-actions {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.worktree-btn {
+  padding: 6px 12px;
+  border: var(--border-width) solid var(--border-default);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.worktree-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+.worktree-btn.primary {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.worktree-btn.primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.worktree-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.worktree-modal {
+  width: 520px;
+  background: var(--bg-secondary);
+  border: var(--border-width) solid var(--border-default);
+  box-shadow: var(--shadow-xl);
+}
+
+.worktree-modal-header {
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: var(--border-width) solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.worktree-modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.worktree-modal-body {
+  padding: var(--space-lg);
+}
+
+.worktree-form-group {
+  margin-bottom: var(--space-lg);
+}
+
+.worktree-form-group label {
+  display: block;
+  margin-bottom: var(--space-sm);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.worktree-input {
+  width: 100%;
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border: var(--border-width) solid var(--border-default);
+  color: var(--text-primary);
+  font-size: 13px;
+  transition: all var(--transition-base);
+}
+
+.worktree-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(94, 106, 210, 0.1);
+}
+
+.worktree-path-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.worktree-branch-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-sm);
+}
+
+.worktree-toggle-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-sm);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.worktree-toggle-row label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.worktree-modal-actions {
+  padding: var(--space-md) var(--space-lg);
+  border-top: var(--border-width) solid var(--border-subtle);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+}

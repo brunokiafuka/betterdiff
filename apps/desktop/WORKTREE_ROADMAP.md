@@ -64,11 +64,11 @@ Legend
   - Target date:
 
 ## 4) Critical flows (error-proof)
-- [ ] Validate incompatible flags (detach vs branch vs orphan).
+- [x] Validate incompatible flags (detach vs branch vs orphan).
   - Owner:
   - Priority:
   - Target date:
-- [ ] Block remove if dirty unless `force`.
+- [x] Block remove if dirty unless `force`.
   - Owner:
   - Priority:
   - Target date:
@@ -76,7 +76,7 @@ Legend
   - Owner:
   - Priority:
   - Target date:
-- [ ] Support prune dry-run.
+- [x] Support prune dry-run.
   - Owner:
   - Priority:
   - Target date:

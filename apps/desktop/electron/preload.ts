@@ -38,6 +38,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Local repositories
   local: {
     selectFolder: () => ipcRenderer.invoke('local:selectFolder'),
+    selectFolderPath: () => ipcRenderer.invoke('local:selectFolderPath'),
+    pathExists: (targetPath: string) => ipcRenderer.invoke('local:pathExists', targetPath),
+    removeFolder: (targetPath: string) => ipcRenderer.invoke('local:removeFolder', targetPath),
     getStatus: (repoPath: string) => ipcRenderer.invoke('local:getStatus', repoPath),
     stashChanges: (repoPath: string, message?: string) => ipcRenderer.invoke('local:stashChanges', repoPath, message),
     checkoutBranch: (repoPath: string, branchName: string, force?: boolean) => ipcRenderer.invoke('local:checkoutBranch', repoPath, branchName, force),

@@ -29,6 +29,9 @@ declare global {
       }
       local: {
         selectFolder: () => Promise<any>
+        selectFolderPath: () => Promise<string | null>
+        pathExists: (targetPath: string) => Promise<boolean>
+        removeFolder: (targetPath: string) => Promise<{ success: boolean }>
         getStatus: (repoPath: string) => Promise<any>
         stashChanges: (repoPath: string, message?: string) => Promise<any>
         checkoutBranch: (repoPath: string, branchName: string, force?: boolean) => Promise<any>

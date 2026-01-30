@@ -605,6 +605,37 @@ ipcMain.handle("local:selectFolder", async () => {
   }
 });
 
+ipcMain.handle("local:selectFolderPath", async () => {
+  const targetWindow = BrowserWindow.getFocusedWindow() ?? mainWindow;
+  if (!targetWindow) {
+    throw new Error("No active window for folder selection");
+  }
+
+  const result = await dialog.showOpenDialog(targetWindow, {
+    properties: ["openDirectory"],
+    title: "Select Folder",
+  });
+
+  if (result.canceled || result.filePaths.length === 0) {
+    return null;
+  }
+
+  return result.filePaths[0];
+});
+
+ipcMain.handle("local:pathExists", async (_event, targetPath: string) => {
+  return fs.existsSync(targetPath);
+});
+
+ipcMain.handle("local:removeFolder", async (_event, targetPath: string) => {
+  try {
+    fs.rmSync(targetPath, { recursive: true, force: true });
+    return { success: true };
+  } catch (error: any) {
+    throw new Error(`Failed to remove folder: ${error.message}`);
+  }
+});
+
 ipcMain.handle("local:getStatus", async (_event, repoPath: string) => {
   try {
     const statusOutput = execGitCommand(repoPath, "status --porcelain");
@@ -690,8 +721,8 @@ ipcMain.handle("local:listBranches", async (_event, repoPath: string) => {
       .forEach((branchLine) => {
         // Check if this is the current branch (marked with *)
         const isCurrent = branchLine.trim().startsWith("*");
-        // Remove * marker and whitespace
-        const name = branchLine.replace(/^\*\s*/, "").trim();
+        // Remove markers (* current, + checked out elsewhere) and whitespace
+        const name = branchLine.replace(/^[*+]\s*/, "").trim();
         if (!name) return;
 
         try {
@@ -808,6 +839,7 @@ type WorktreeAddOptions = {
   path: string;
   commit?: string;
   branch?: string;
+  useExistingBranch?: boolean;
   resetBranch?: boolean;
   detach?: boolean;
   checkout?: boolean;
@@ -836,6 +868,18 @@ function validateWorktreeAddOptions(options: WorktreeAddOptions) {
     throw new Error("INVALID_OPTIONS: Orphan requires a new branch name.");
   }
 
+  if (options.useExistingBranch) {
+    if (options.resetBranch) {
+      throw new Error("INVALID_OPTIONS: Reset branch is not allowed for existing branches.");
+    }
+    if (options.orphan) {
+      throw new Error("INVALID_OPTIONS: Orphan is not allowed with existing branch.");
+    }
+    if (options.detach) {
+      throw new Error("INVALID_OPTIONS: Detach is not allowed with existing branch.");
+    }
+  }
+
   if ((options.track || options.guessRemote) && !options.branch && !options.commit) {
     throw new Error("INVALID_OPTIONS: Track/guess-remote requires a branch or commit.");
   }
@@ -860,6 +904,14 @@ function mapWorktreeError(errorMessage: string): string {
   return errorMessage;
 }
 
+function normalizeBranchName(value?: string): string | undefined {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  const prefix = "refs/heads/";
+  return trimmed.startsWith(prefix) ? trimmed.slice(prefix.length) : trimmed;
+}
+
 function parseWorktreeList(output: string): WorktreeInfo[] {
   if (!output) return [];
   const blocks = output.split(/\n\n+/).filter((block) => block.trim().length > 0);
@@ -871,7 +923,8 @@ function parseWorktreeList(output: string): WorktreeInfo[] {
       } else if (line.startsWith("HEAD ")) {
         info.head = line.replace("HEAD ", "").trim();
       } else if (line.startsWith("branch ")) {
-        info.branch = line.replace("branch ", "").trim();
+        const branchRef = line.replace("branch ", "").trim();
+        info.branch = normalizeBranchName(branchRef) ?? branchRef;
       } else if (line.startsWith("locked")) {
         info.locked = true;
         const reason = line.replace("locked", "").trim();
@@ -907,6 +960,20 @@ ipcMain.handle(
   ) => {
     try {
       validateWorktreeAddOptions(options);
+      const targetBranch = normalizeBranchName(options.branch);
+      if (targetBranch && !options.force) {
+        const worktreeList = parseWorktreeList(
+          execGitCommand(repoPath, "worktree list --porcelain"),
+        );
+        const inUse = worktreeList.find(
+          (worktree) => normalizeBranchName(worktree.branch) === targetBranch,
+        );
+        if (inUse) {
+          throw new Error(
+            `BRANCH_IN_USE: Branch "${targetBranch}" is already checked out at ${inUse.path}. Use Force or choose another branch.`,
+          );
+        }
+      }
       const parts: string[] = ["worktree", "add"];
       if (options.force) parts.push("-f");
       if (options.detach) parts.push("--detach");
@@ -918,12 +985,26 @@ ipcMain.handle(
       if (options.orphan) parts.push("--orphan");
       if (options.track) parts.push("--track");
       if (options.guessRemote) parts.push("--guess-remote");
-      if (options.branch) {
+      if (options.branch && !options.useExistingBranch) {
         parts.push(options.resetBranch ? "-B" : "-b", options.branch);
       }
       parts.push(shellQuote(options.path));
-      if (options.commit) parts.push(options.commit);
-      execGitCommand(repoPath, parts.join(" "));
+      const commitArg = options.useExistingBranch
+        ? options.commit || options.branch
+        : options.commit;
+      if (commitArg) parts.push(commitArg);
+      const command = parts.join(" ");
+      try {
+        execGitCommand(repoPath, command);
+      } catch (error: any) {
+        const mappedError = mapWorktreeError(error.message || "");
+        if (mappedError.includes("PATH_EXISTS")) {
+          execGitCommand(repoPath, "worktree prune");
+          execGitCommand(repoPath, command);
+        } else {
+          throw error;
+        }
+      }
       return { success: true };
     } catch (error: any) {
       const mappedError = mapWorktreeError(error.message || "");

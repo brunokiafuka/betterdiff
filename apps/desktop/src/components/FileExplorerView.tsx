@@ -5,9 +5,10 @@ import { FileDiffViewer } from './FileDiffViewer'
 import { CommitDetailsPanel } from './CommitDetailsPanel'
 import { AIPanel } from './AIPanel'
 import { HotspotPanel } from './HotspotPanel'
-import { FolderOpen, X, Sparkles, Flame, Info } from 'lucide-react'
+import { FolderOpen, X, Sparkles, Flame, Info, GitBranch } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import { useUiStore } from '../stores/uiStore'
+import { WorktreesPanel } from './WorktreesPanel'
 import './FileExplorerView.css'
 
 export const FileExplorerView: React.FC = () => {
@@ -16,6 +17,7 @@ export const FileExplorerView: React.FC = () => {
   const [showDetailsPanel, setShowDetailsPanel] = useState(false)
   const [showAIPanel, setShowAIPanel] = useState(false)
   const [showHotspotsPanel, setShowHotspotsPanel] = useState(false)
+  const [showWorktreesPanel, setShowWorktreesPanel] = useState(false)
   const { currentRepo } = useAppStore()
   const { addToast } = useUiStore()
 
@@ -26,6 +28,7 @@ export const FileExplorerView: React.FC = () => {
     setShowDetailsPanel(false)
     setShowAIPanel(false)
     setShowHotspotsPanel(false)
+    setShowWorktreesPanel(false)
   }, [currentRepo])
 
   // Listen for file selection events from FileTreePanel
@@ -61,12 +64,21 @@ export const FileExplorerView: React.FC = () => {
     setShowAIPanel(true)
     setShowDetailsPanel(false)
     setShowHotspotsPanel(false)
+    setShowWorktreesPanel(false)
   }
 
   const openHotspotsPanel = () => {
     setShowHotspotsPanel(true)
     setShowAIPanel(false)
     setShowDetailsPanel(false)
+    setShowWorktreesPanel(false)
+  }
+
+  const openWorktreesPanel = () => {
+    setShowWorktreesPanel(true)
+    setShowAIPanel(false)
+    setShowDetailsPanel(false)
+    setShowHotspotsPanel(false)
   }
 
   // Keyboard shortcut: Cmd+A to open AI panel
@@ -114,7 +126,7 @@ export const FileExplorerView: React.FC = () => {
     return () => window.removeEventListener('open-details-panel', handleOpenDetailsPanel)
   }, [selectedCommits, addToast])
 
-  const hasSidePanel = showAIPanel || showDetailsPanel || showHotspotsPanel
+  const hasSidePanel = showAIPanel || showDetailsPanel || showHotspotsPanel || showWorktreesPanel
 
   return (
     <div className={`file-explorer-view ${hasSidePanel ? 'with-side-panel' : ''}`}>
@@ -161,9 +173,11 @@ export const FileExplorerView: React.FC = () => {
       </div>
 
       {/* Right Panel - AI, Commit Details, or Hotspots */}
-      {(showAIPanel || showDetailsPanel || showHotspotsPanel) && (
+      {(showAIPanel || showDetailsPanel || showHotspotsPanel || showWorktreesPanel) && (
         <div className="file-explorer-details">
-          {showAIPanel ? (
+          {showWorktreesPanel ? (
+            <WorktreesPanel onClose={() => setShowWorktreesPanel(false)} />
+          ) : showAIPanel ? (
             <AIPanel onClose={() => setShowAIPanel(false)} />
           ) : showHotspotsPanel ? (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#252526' }}>
@@ -223,6 +237,15 @@ export const FileExplorerView: React.FC = () => {
 
       {currentRepo && (
         <div className="side-rail">
+          <button
+            className={`side-rail-btn ${showWorktreesPanel ? 'active' : ''}`}
+            onClick={openWorktreesPanel}
+            title="Worktrees"
+            aria-label="Worktrees"
+          >
+            <GitBranch size={16} />
+            <span>Worktrees</span>
+          </button>
           <button
             className={`side-rail-btn ${showDetailsPanel ? 'active' : ''}`}
             onClick={openDetailsPanel}
