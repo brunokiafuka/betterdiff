@@ -1,6 +1,8 @@
 // Type declarations for Electron IPC bridge
 // This file ensures TypeScript knows about window.electronAPI
 
+import type { WorktreeAddOptions, WorktreeInfo } from './index'
+
 export {}
 
 declare global {
@@ -37,6 +39,13 @@ declare global {
         getFileHistory: (repoPath: string, path: string, ref: string) => Promise<any[]>
         getCommit: (repoPath: string, sha: string) => Promise<any>
         getBlame: (repoPath: string, ref: string, path: string) => Promise<any[]>
+        worktreeList: (repoPath: string) => Promise<WorktreeInfo[]>
+        worktreeAdd: (repoPath: string, options: WorktreeAddOptions) => Promise<{ success: boolean }>
+        worktreeRemove: (repoPath: string, worktreePath: string, force?: boolean) => Promise<{ success: boolean }>
+        worktreeMove: (repoPath: string, worktreePath: string, newPath: string, force?: boolean) => Promise<{ success: boolean }>
+        worktreePrune: (repoPath: string, dryRun?: boolean) => Promise<{ success: boolean }>
+        worktreeLock: (repoPath: string, worktreePath: string, reason?: string) => Promise<{ success: boolean }>
+        worktreeUnlock: (repoPath: string, worktreePath: string) => Promise<{ success: boolean }>
       }
       hotspot: {
         analyze: (repo: string, ref: string, timeWindow?: number) => Promise<any>

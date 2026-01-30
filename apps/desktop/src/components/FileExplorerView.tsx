@@ -5,8 +5,9 @@ import { FileDiffViewer } from './FileDiffViewer'
 import { CommitDetailsPanel } from './CommitDetailsPanel'
 import { AIPanel } from './AIPanel'
 import { HotspotPanel } from './HotspotPanel'
-import { FolderOpen, X } from 'lucide-react'
+import { FolderOpen, X, Sparkles, Flame, Info } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
+import { useUiStore } from '../stores/uiStore'
 import './FileExplorerView.css'
 
 export const FileExplorerView: React.FC = () => {
@@ -16,6 +17,7 @@ export const FileExplorerView: React.FC = () => {
   const [showAIPanel, setShowAIPanel] = useState(false)
   const [showHotspotsPanel, setShowHotspotsPanel] = useState(false)
   const { currentRepo } = useAppStore()
+  const { addToast } = useUiStore()
 
   // Clear state when repo changes
   useEffect(() => {
@@ -45,14 +47,35 @@ export const FileExplorerView: React.FC = () => {
     setSelectedCommits({ base: baseSha, head: headSha })
   }, [])
 
+  const openDetailsPanel = () => {
+    if (!selectedCommits) {
+      addToast('info', 'Select commits to view details')
+      return
+    }
+    setShowDetailsPanel(true)
+    setShowAIPanel(false)
+    setShowHotspotsPanel(false)
+  }
+
+  const openAIPanel = () => {
+    setShowAIPanel(true)
+    setShowDetailsPanel(false)
+    setShowHotspotsPanel(false)
+  }
+
+  const openHotspotsPanel = () => {
+    setShowHotspotsPanel(true)
+    setShowAIPanel(false)
+    setShowDetailsPanel(false)
+  }
+
   // Keyboard shortcut: Cmd+A to open AI panel
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'a') {
         e.preventDefault()
         if (currentRepo) {
-          setShowAIPanel(true)
-          setShowDetailsPanel(false) // Close details panel if open
+          openAIPanel()
         }
       }
     }
@@ -64,9 +87,7 @@ export const FileExplorerView: React.FC = () => {
   // Listen for AI panel open event from AppShell
   useEffect(() => {
     const handleOpenAIPanel = () => {
-      setShowAIPanel(true)
-      setShowDetailsPanel(false)
-      setShowHotspotsPanel(false)
+      openAIPanel()
     }
 
     window.addEventListener('open-ai-panel', handleOpenAIPanel)
@@ -76,24 +97,34 @@ export const FileExplorerView: React.FC = () => {
   // Listen for Hotspots panel open event from AppShell
   useEffect(() => {
     const handleOpenHotspotsPanel = () => {
-      setShowHotspotsPanel(true)
-      setShowAIPanel(false)
-      setShowDetailsPanel(false)
+      openHotspotsPanel()
     }
 
     window.addEventListener('open-hotspots-panel', handleOpenHotspotsPanel)
     return () => window.removeEventListener('open-hotspots-panel', handleOpenHotspotsPanel)
   }, [])
 
+  // Listen for Details panel open event from AppShell
+  useEffect(() => {
+    const handleOpenDetailsPanel = () => {
+      openDetailsPanel()
+    }
+
+    window.addEventListener('open-details-panel', handleOpenDetailsPanel)
+    return () => window.removeEventListener('open-details-panel', handleOpenDetailsPanel)
+  }, [selectedCommits, addToast])
+
+  const hasSidePanel = showAIPanel || showDetailsPanel || showHotspotsPanel
+
   return (
-    <div className="file-explorer-view">
+    <div className={`file-explorer-view ${hasSidePanel ? 'with-side-panel' : ''}`}>
       {/* Left Panel - File Tree */}
       <div className="file-explorer-left">
         <FileTreePanel />
       </div>
 
       {/* Middle Panel - Split into Diff/Content and History */}
-      <div className={`file-explorer-right ${(showAIPanel || showDetailsPanel || showHotspotsPanel) ? 'with-details' : ''}`}>
+      <div className={`file-explorer-right ${hasSidePanel ? 'with-details' : ''}`}>
         {selectedFilePath ? (
           <>
             {/* Top: Diff or Content Viewer */}
@@ -104,7 +135,7 @@ export const FileExplorerView: React.FC = () => {
                 headSha={selectedCommits?.head || null}
                 repoFullName={currentRepo?.fullName || ''}
                 repo={currentRepo || undefined}
-                onDetailsClick={() => setShowDetailsPanel(true)}
+                onDetailsClick={openDetailsPanel}
               />
             </div>
 
@@ -187,6 +218,38 @@ export const FileExplorerView: React.FC = () => {
               />
             )
           )}
+        </div>
+      )}
+
+      {currentRepo && (
+        <div className="side-rail">
+          <button
+            className={`side-rail-btn ${showDetailsPanel ? 'active' : ''}`}
+            onClick={openDetailsPanel}
+            title="Details"
+            aria-label="Details"
+          >
+            <Info size={16} />
+            <span>Details</span>
+          </button>
+          <button
+            className={`side-rail-btn ${showHotspotsPanel ? 'active' : ''}`}
+            onClick={openHotspotsPanel}
+            title="Hotspots"
+            aria-label="Hotspots"
+          >
+            <Flame size={16} />
+            <span>Hotspots</span>
+          </button>
+          <button
+            className={`side-rail-btn ${showAIPanel ? 'active' : ''}`}
+            onClick={openAIPanel}
+            title="AI Analysis"
+            aria-label="AI Analysis"
+          >
+            <Sparkles size={16} />
+            <span>AI</span>
+          </button>
         </div>
       )}
     </div>

@@ -539,6 +539,10 @@ function execGitCommand(repoPath: string, command: string): string {
   }
 }
 
+function shellQuote(value: string): string {
+  return `"${value.replace(/"/g, '""')}"`;
+}
+
 // Helper function to check if a path is a git repository
 function isGitRepo(repoPath: string): boolean {
   return fs.existsSync(path.join(repoPath, ".git"));
@@ -787,6 +791,242 @@ ipcMain.handle("local:listBranches", async (_event, repoPath: string) => {
     return [];
   }
 });
+
+type WorktreeInfo = {
+  path: string;
+  head?: string;
+  branch?: string;
+  detached?: boolean;
+  locked?: boolean;
+  lockedReason?: string;
+  prunable?: boolean;
+  prunableReason?: string;
+  isMain?: boolean;
+};
+
+type WorktreeAddOptions = {
+  path: string;
+  commit?: string;
+  branch?: string;
+  resetBranch?: boolean;
+  detach?: boolean;
+  checkout?: boolean;
+  lock?: boolean;
+  lockReason?: string;
+  orphan?: boolean;
+  force?: boolean;
+  track?: boolean;
+  guessRemote?: boolean;
+};
+
+function validateWorktreeAddOptions(options: WorktreeAddOptions) {
+  if (!options.path || options.path.trim().length === 0) {
+    throw new Error("INVALID_OPTIONS: Path is required.");
+  }
+
+  if (options.detach && options.orphan) {
+    throw new Error("INVALID_OPTIONS: Detach and orphan are incompatible.");
+  }
+
+  if (options.detach && options.branch) {
+    throw new Error("INVALID_OPTIONS: Detach cannot be used with branch.");
+  }
+
+  if (options.orphan && !options.branch) {
+    throw new Error("INVALID_OPTIONS: Orphan requires a new branch name.");
+  }
+
+  if ((options.track || options.guessRemote) && !options.branch && !options.commit) {
+    throw new Error("INVALID_OPTIONS: Track/guess-remote requires a branch or commit.");
+  }
+}
+
+function mapWorktreeError(errorMessage: string): string {
+  if (errorMessage.includes("already checked out")) {
+    return "BRANCH_IN_USE: Branch is already checked out in another worktree.";
+  }
+  if (errorMessage.includes("already exists")) {
+    return "PATH_EXISTS: The worktree path already exists.";
+  }
+  if (errorMessage.includes("not a git repository")) {
+    return "INVALID_REPO: Path is not a git repository.";
+  }
+  if (errorMessage.includes("is dirty") || errorMessage.includes("not clean")) {
+    return "DIRTY_WORKTREE: Worktree has uncommitted changes.";
+  }
+  if (errorMessage.includes("locked")) {
+    return "LOCKED_WORKTREE: Worktree is locked.";
+  }
+  return errorMessage;
+}
+
+function parseWorktreeList(output: string): WorktreeInfo[] {
+  if (!output) return [];
+  const blocks = output.split(/\n\n+/).filter((block) => block.trim().length > 0);
+  return blocks.map((block, index) => {
+    const info: WorktreeInfo = { path: "", isMain: index === 0 };
+    block.split("\n").forEach((line) => {
+      if (line.startsWith("worktree ")) {
+        info.path = line.replace("worktree ", "").trim();
+      } else if (line.startsWith("HEAD ")) {
+        info.head = line.replace("HEAD ", "").trim();
+      } else if (line.startsWith("branch ")) {
+        info.branch = line.replace("branch ", "").trim();
+      } else if (line.startsWith("locked")) {
+        info.locked = true;
+        const reason = line.replace("locked", "").trim();
+        if (reason) info.lockedReason = reason;
+      } else if (line.startsWith("prunable")) {
+        info.prunable = true;
+        const reason = line.replace("prunable", "").trim();
+        if (reason) info.prunableReason = reason;
+      } else if (line.startsWith("detached")) {
+        info.detached = true;
+      }
+    });
+    return info;
+  });
+}
+
+ipcMain.handle("local:worktree:list", async (_event, repoPath: string) => {
+  try {
+    const output = execGitCommand(repoPath, "worktree list --porcelain");
+    return parseWorktreeList(output);
+  } catch (error: any) {
+    console.error("Failed to list worktrees:", error.message);
+    throw new Error(`Failed to list worktrees: ${error.message}`);
+  }
+});
+
+ipcMain.handle(
+  "local:worktree:add",
+  async (
+    _event,
+    repoPath: string,
+    options: WorktreeAddOptions,
+  ) => {
+    try {
+      validateWorktreeAddOptions(options);
+      const parts: string[] = ["worktree", "add"];
+      if (options.force) parts.push("-f");
+      if (options.detach) parts.push("--detach");
+      if (options.checkout === false) parts.push("--no-checkout");
+      if (options.lock) parts.push("--lock");
+      if (options.lock && options.lockReason) {
+        parts.push("--reason", shellQuote(options.lockReason));
+      }
+      if (options.orphan) parts.push("--orphan");
+      if (options.track) parts.push("--track");
+      if (options.guessRemote) parts.push("--guess-remote");
+      if (options.branch) {
+        parts.push(options.resetBranch ? "-B" : "-b", options.branch);
+      }
+      parts.push(shellQuote(options.path));
+      if (options.commit) parts.push(options.commit);
+      execGitCommand(repoPath, parts.join(" "));
+      return { success: true };
+    } catch (error: any) {
+      const mappedError = mapWorktreeError(error.message || "");
+      console.error("Failed to add worktree:", mappedError);
+      throw new Error(`Failed to add worktree: ${mappedError}`);
+    }
+  },
+);
+
+ipcMain.handle(
+  "local:worktree:remove",
+  async (_event, repoPath: string, worktreePath: string, force?: boolean) => {
+    try {
+      const args = ["worktree", "remove"];
+      if (force) args.push("-f");
+      args.push(shellQuote(worktreePath));
+      execGitCommand(repoPath, args.join(" "));
+      return { success: true };
+    } catch (error: any) {
+      const mappedError = mapWorktreeError(error.message || "");
+      console.error("Failed to remove worktree:", mappedError);
+      throw new Error(`Failed to remove worktree: ${mappedError}`);
+    }
+  },
+);
+
+ipcMain.handle(
+  "local:worktree:move",
+  async (
+    _event,
+    repoPath: string,
+    worktreePath: string,
+    newPath: string,
+    force?: boolean,
+  ) => {
+    try {
+      const args = ["worktree", "move"];
+      if (force) args.push("-f");
+      args.push(shellQuote(worktreePath), shellQuote(newPath));
+      execGitCommand(repoPath, args.join(" "));
+      return { success: true };
+    } catch (error: any) {
+      const mappedError = mapWorktreeError(error.message || "");
+      console.error("Failed to move worktree:", mappedError);
+      throw new Error(`Failed to move worktree: ${mappedError}`);
+    }
+  },
+);
+
+ipcMain.handle(
+  "local:worktree:prune",
+  async (_event, repoPath: string, dryRun?: boolean) => {
+    try {
+      const args = ["worktree", "prune"];
+      if (dryRun) args.push("-n");
+      execGitCommand(repoPath, args.join(" "));
+      return { success: true };
+    } catch (error: any) {
+      const mappedError = mapWorktreeError(error.message || "");
+      console.error("Failed to prune worktrees:", mappedError);
+      throw new Error(`Failed to prune worktrees: ${mappedError}`);
+    }
+  },
+);
+
+ipcMain.handle(
+  "local:worktree:lock",
+  async (
+    _event,
+    repoPath: string,
+    worktreePath: string,
+    reason?: string,
+  ) => {
+    try {
+      const args = ["worktree", "lock"];
+      if (reason) args.push("--reason", shellQuote(reason));
+      args.push(shellQuote(worktreePath));
+      execGitCommand(repoPath, args.join(" "));
+      return { success: true };
+    } catch (error: any) {
+      const mappedError = mapWorktreeError(error.message || "");
+      console.error("Failed to lock worktree:", mappedError);
+      throw new Error(`Failed to lock worktree: ${mappedError}`);
+    }
+  },
+);
+
+ipcMain.handle(
+  "local:worktree:unlock",
+  async (_event, repoPath: string, worktreePath: string) => {
+    try {
+      execGitCommand(
+        repoPath,
+        `worktree unlock ${shellQuote(worktreePath)}`,
+      );
+      return { success: true };
+    } catch (error: any) {
+      const mappedError = mapWorktreeError(error.message || "");
+      console.error("Failed to unlock worktree:", mappedError);
+      throw new Error(`Failed to unlock worktree: ${mappedError}`);
+    }
+  },
+);
 
 ipcMain.handle(
   "local:compareRefs",

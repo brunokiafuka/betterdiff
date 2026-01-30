@@ -36,6 +36,63 @@
   border-left: var(--border-width) solid var(--border-subtle);
 }
 
+.side-rail {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 4px;
+  background: rgba(17, 17, 17, 0.85);
+  border-left: var(--border-width) solid var(--border-subtle);
+  border-radius: 0;
+  z-index: 15;
+  backdrop-filter: blur(16px) saturate(150%);
+}
+
+.file-explorer-view.with-side-panel .side-rail {
+  right: 400px;
+}
+
+.side-rail-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 6px;
+  width: 44px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-size: 10px;
+  /*text-transform: uppercase;*/
+  letter-spacing: 0.6px;
+  transition: all var(--transition-base);
+}
+
+.side-rail-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+  border-color: var(--border-default);
+}
+
+.side-rail-btn.active {
+  color: var(--accent-primary);
+  background: var(--bg-active);
+  border-color: var(--accent-primary);
+}
+
+.side-rail-btn span {
+  line-height: 1.2;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  letter-spacing: 1px;
+}
+
 .file-explorer-content {
   flex: 1;
   display: flex;

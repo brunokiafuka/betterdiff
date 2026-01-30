@@ -54,6 +54,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('local:getCommit', repoPath, sha),
     getBlame: (repoPath: string, ref: string, path: string) =>
       ipcRenderer.invoke('local:getBlame', repoPath, ref, path),
+    worktreeList: (repoPath: string) => ipcRenderer.invoke('local:worktree:list', repoPath),
+    worktreeAdd: (repoPath: string, options: any) =>
+      ipcRenderer.invoke('local:worktree:add', repoPath, options),
+    worktreeRemove: (repoPath: string, worktreePath: string, force?: boolean) =>
+      ipcRenderer.invoke('local:worktree:remove', repoPath, worktreePath, force),
+    worktreeMove: (repoPath: string, worktreePath: string, newPath: string, force?: boolean) =>
+      ipcRenderer.invoke('local:worktree:move', repoPath, worktreePath, newPath, force),
+    worktreePrune: (repoPath: string, dryRun?: boolean) =>
+      ipcRenderer.invoke('local:worktree:prune', repoPath, dryRun),
+    worktreeLock: (repoPath: string, worktreePath: string, reason?: string) =>
+      ipcRenderer.invoke('local:worktree:lock', repoPath, worktreePath, reason),
+    worktreeUnlock: (repoPath: string, worktreePath: string) =>
+      ipcRenderer.invoke('local:worktree:unlock', repoPath, worktreePath),
   },
   
   // Hotspot detection

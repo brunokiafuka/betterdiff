@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Settings, Sparkles, Flame } from 'lucide-react'
+import { Settings } from 'lucide-react'
 import { useAppStore } from '../stores/appStore'
 import { useUiStore } from '../stores/uiStore'
 import { RepoSearchModal } from './RepoSearchModal'
@@ -208,30 +208,6 @@ export const AppShell: React.FC<AppShellProps> = ({ children, onSettingsClick })
         </div>
 
         <div className="top-bar-right">
-          {currentRepo && (
-            <>
-              <button
-                className="btn-action btn-icon"
-                onClick={() => {
-                  window.dispatchEvent(new CustomEvent('open-hotspots-panel'))
-                }}
-                title="Hotspots (Frequently Changed Files)"
-                aria-label="Hotspots"
-              >
-                <Flame size={18} />
-              </button>
-              <button
-                className="btn-action btn-icon"
-                onClick={() => {
-                  window.dispatchEvent(new CustomEvent('open-ai-panel'))
-                }}
-                title="AI Analysis (⌘A)"
-                aria-label="AI Analysis"
-              >
-                <Sparkles size={18} />
-              </button>
-            </>
-          )}
           <button
             className="btn-action btn-icon"
             onClick={onSettingsClick}
