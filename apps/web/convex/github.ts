@@ -600,3 +600,43 @@ export const getBlame = action({
     return [];
   },
 });
+
+// Get pull requests associated with a commit
+export const getPullRequestsForCommit = action({
+  args: {
+    repoFullName: v.string(),
+    sha: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const token = await getTokenByUsername(ctx);
+    if (!token) {
+      return [];
+    }
+
+    const [owner, repo] = args.repoFullName.split("/");
+
+    try {
+      const octokit = new Octokit({ auth: token });
+      
+      // GitHub API: List PRs associated with a commit
+      const { data } = await octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+        owner,
+        repo,
+        commit_sha: args.sha,
+      });
+
+      return data.map((pr) => ({
+        number: pr.number,
+        title: pr.title,
+        state: pr.state,
+        url: pr.html_url,
+        author: pr.user?.login || "Unknown",
+        createdAt: pr.created_at,
+        mergedAt: pr.merged_at,
+      }));
+    } catch (error: any) {
+      console.error("Failed to fetch PRs for commit:", error);
+      return [];
+    }
+  },
+});
