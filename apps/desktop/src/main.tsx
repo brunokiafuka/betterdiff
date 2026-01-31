@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
-import './App.css'
+// Theme is now imported from @whodidit/ui via component imports
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

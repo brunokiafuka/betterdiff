@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Info } from 'lucide-react'
+import { FileDiffViewer as UiFileDiffViewer } from '@whodidit/ui'
 import { FileTreePanel } from './FileTreePanel'
 import { FileHistoryPanel } from './FileHistoryPanel'
-import { FileDiffViewer } from './FileDiffViewer'
 import { CommitDetailsPanel } from './CommitDetailsPanel'
 import { AIPanel } from './AIPanel'
 import { HotspotPanel } from './HotspotPanel'
@@ -16,6 +17,53 @@ export const FileExplorerView: React.FC = () => {
   const [showAIPanel, setShowAIPanel] = useState(false)
   const [showHotspotsPanel, setShowHotspotsPanel] = useState(false)
   const { currentRepo } = useAppStore()
+
+  // File content state
+  const [oldContent, setOldContent] = useState('')
+  const [newContent, setNewContent] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  // Load file contents when commits change
+  useEffect(() => {
+    if (!selectedCommits?.base || !selectedCommits?.head || !currentRepo || !selectedFilePath) {
+      return
+    }
+
+    const loadFileContents = async () => {
+      setLoading(true)
+      try {
+        const isLocal = currentRepo.type === 'local'
+        if (selectedCommits.base === selectedCommits.head) {
+          // Same commit - load content only once
+          const content = isLocal
+            ? await window.electronAPI.local.getFileContent(currentRepo.localPath!, selectedCommits.base, selectedFilePath)
+            : await window.electronAPI.github.getFileContent(currentRepo.fullName, selectedCommits.base, selectedFilePath)
+          setOldContent(content)
+          setNewContent(content)
+        } else {
+          // Different commits - fetch both versions
+          const [oldData, newData] = await Promise.all([
+            isLocal
+              ? window.electronAPI.local.getFileContent(currentRepo.localPath!, selectedCommits.base, selectedFilePath)
+              : window.electronAPI.github.getFileContent(currentRepo.fullName, selectedCommits.base, selectedFilePath),
+            isLocal
+              ? window.electronAPI.local.getFileContent(currentRepo.localPath!, selectedCommits.head, selectedFilePath)
+              : window.electronAPI.github.getFileContent(currentRepo.fullName, selectedCommits.head, selectedFilePath)
+          ])
+          setOldContent(oldData)
+          setNewContent(newData)
+        }
+      } catch (error) {
+        console.error('Failed to load file contents:', error)
+        setOldContent('// Failed to load content')
+        setNewContent('// Failed to load content')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadFileContents()
+  }, [selectedCommits, currentRepo, selectedFilePath])
 
   // Clear state when repo changes
   useEffect(() => {
@@ -98,13 +146,16 @@ export const FileExplorerView: React.FC = () => {
           <>
             {/* Top: Diff or Content Viewer */}
             <div className="file-explorer-content">
-              <FileDiffViewer
+              <UiFileDiffViewer
                 filePath={selectedFilePath}
                 baseSha={selectedCommits?.base || null}
                 headSha={selectedCommits?.head || null}
-                repoFullName={currentRepo?.fullName || ''}
-                repo={currentRepo || undefined}
+                oldContent={oldContent}
+                newContent={newContent}
+                loading={loading}
                 onDetailsClick={() => setShowDetailsPanel(true)}
+                detailsLabel="Details"
+                detailsIcon={<Info size={16} />}
               />
             </div>
 
@@ -136,11 +187,11 @@ export const FileExplorerView: React.FC = () => {
             <AIPanel onClose={() => setShowAIPanel(false)} />
           ) : showHotspotsPanel ? (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#252526' }}>
-              <div style={{ 
-                padding: '12px 16px', 
-                borderBottom: '1px solid #3c3c3c', 
-                display: 'flex', 
-                justifyContent: 'space-between', 
+              <div style={{
+                padding: '12px 16px',
+                borderBottom: '1px solid #3c3c3c',
+                display: 'flex',
+                justifyContent: 'space-between',
                 alignItems: 'center',
                 background: '#2d2d30'
               }}>

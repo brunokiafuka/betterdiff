@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSignals } from '@preact/signals-react/runtime'
 import { GitBranch, ChevronDown, X } from 'lucide-react'
+import { BranchSelector as UiBranchSelector } from '@whodidit/ui'
 import { currentRepo, baseRef, setRefs } from '../stores/appStore'
 import { useListBranches } from '../services/github'
-import './BranchSelector.css'
 
 export const BranchSelector: React.FC = () => {
   useSignals()
@@ -91,73 +91,31 @@ export const BranchSelector: React.FC = () => {
 
   const currentBranch = ref ? (branches.find((b: any) => b.name === ref.name) || ref) : null
 
-  return (
-    <div className="branch-selector" ref={dropdownRef}>
-      <button
-        className="branch-selector-btn"
-        onClick={() => setIsOpen(!isOpen)}
-        title="Switch branch"
-        disabled={loading || !currentBranch}
-      >
-        <GitBranch size={16} />
-        <span className="branch-name">
-          {loading ? 'Loading...' : currentBranch?.name || 'Select branch'}
-        </span>
-        <ChevronDown size={14} className={`chevron ${isOpen ? 'open' : ''}`} />
-      </button>
+  const branchItems = branches.map((branch: any) => ({
+    name: branch.name,
+    isCurrent: branch.name === currentBranch?.name,
+  }))
 
-      {isOpen && (
-        <div className="branch-dropdown">
-          <div className="branch-dropdown-header">
-            <span>Select branch</span>
-            <button
-              className="branch-dropdown-close"
-              onClick={() => setIsOpen(false)}
-              title="Close"
-            >
-              <X size={14} />
-            </button>
-          </div>
-          <div className="branch-dropdown-content">
-            {loading ? (
-              <div className="branch-loading">
-                <div className="spinner"></div>
-                <span>Loading branches...</span>
-              </div>
-            ) : error ? (
-              <div className="branch-error">
-                <span>{error}</span>
-                <button
-                  className="error-dismiss"
-                  onClick={() => setError(null)}
-                >
-                  Dismiss
-                </button>
-              </div>
-            ) : branches.length === 0 ? (
-              <div className="branch-empty">
-                <span>No branches found</span>
-              </div>
-            ) : (
-              branches.map((branch: any) => {
-                const isCurrent = branch.name === currentBranch.name
-                return (
-                  <button
-                    key={branch.name}
-                    className={`branch-item ${isCurrent ? 'current' : ''}`}
-                    onClick={() => handleBranchSelect(branch)}
-                    disabled={isCurrent}
-                  >
-                    <GitBranch size={14} />
-                    <span className="branch-item-name">{branch.name}</span>
-                    {isCurrent && <span className="branch-item-badge">Current</span>}
-                  </button>
-                )
-              })
-            )}
-          </div>
-        </div>
-      )}
+  return (
+    <div ref={dropdownRef}>
+      <UiBranchSelector
+        triggerLabel={loading ? 'Loading...' : currentBranch?.name || 'Select branch'}
+        triggerDisabled={loading || !currentBranch}
+        isOpen={isOpen}
+        loading={loading}
+        branches={branchItems}
+        error={error}
+        onToggleOpen={() => setIsOpen(!isOpen)}
+        onClose={() => setIsOpen(false)}
+        onSelectBranch={(branch) =>
+          handleBranchSelect(branches.find((b: any) => b.name === branch.name))
+        }
+        onDismissError={() => setError(null)}
+        triggerIcon={<GitBranch size={16} />}
+        chevronIcon={<ChevronDown size={14} className={`chevron ${isOpen ? 'open' : ''}`} />}
+        closeIcon={<X size={14} />}
+        branchIcon={<GitBranch size={14} />}
+      />
     </div>
   )
 }

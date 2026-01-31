@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { GitBranch, ChevronDown, X, AlertCircle, Save, Trash2 } from 'lucide-react'
+import { BranchSelector as UiBranchSelector } from '@whodidit/ui'
 import { useAppStore } from '../stores/appStore'
-import './BranchSelector.css'
 
 export const BranchSelector: React.FC = () => {
   const { currentRepo, baseRef, setRefs } = useAppStore()
@@ -146,110 +146,49 @@ export const BranchSelector: React.FC = () => {
 
   const currentBranch = branches.find(b => b.name === baseRef.name) || baseRef
 
-  return (
-    <div className="branch-selector" ref={dropdownRef}>
-      <button
-        className="branch-selector-btn"
-        onClick={() => setIsOpen(!isOpen)}
-        disabled={loading}
-        title="Switch branch"
-      >
-        <GitBranch size={16} />
-        <span className="branch-name">{currentBranch.name}</span>
-        <ChevronDown size={14} className={`chevron ${isOpen ? 'open' : ''}`} />
-      </button>
+  const branchItems = branches.map((branch) => ({
+    name: branch.name,
+    isCurrent: branch.name === currentBranch.name || (branch as any).isCurrent,
+  }))
 
-      {isOpen && (
-        <div className="branch-dropdown">
-          <div className="branch-dropdown-header">
-            <span>Select branch</span>
-            <button
-              className="branch-dropdown-close"
-              onClick={() => setIsOpen(false)}
-              title="Close"
-            >
-              <X size={14} />
-            </button>
-          </div>
-          <div className="branch-dropdown-content">
-            {hasLocalChanges && pendingBranch ? (
-              <div className="branch-conflict-warning">
-                <div className="conflict-header">
-                  <AlertCircle size={16} />
-                  <span>Uncommitted changes detected</span>
-                </div>
-                <p className="conflict-message">
-                  You have uncommitted changes that would be overwritten by switching to <strong>{pendingBranch.name}</strong>.
-                </p>
-                <div className="conflict-actions">
-                  <button
-                    className="conflict-btn stash-btn"
-                    onClick={handleStashAndCheckout}
-                    disabled={loading}
-                  >
-                    <Save size={14} />
-                    <span>Stash & Switch</span>
-                  </button>
-                  <button
-                    className="conflict-btn discard-btn"
-                    onClick={handleDiscardAndCheckout}
-                    disabled={loading}
-                  >
-                    <Trash2 size={14} />
-                    <span>Discard & Switch</span>
-                  </button>
-                  <button
-                    className="conflict-btn cancel-btn"
-                    onClick={() => {
-                      setPendingBranch(null)
-                      setHasLocalChanges(false)
-                      setError(null)
-                    }}
-                    disabled={loading}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : loading ? (
-              <div className="branch-loading">
-                <div className="spinner"></div>
-                <span>Loading branches...</span>
-              </div>
-            ) : error ? (
-              <div className="branch-error">
-                <span>{error}</span>
-                <button
-                  className="error-dismiss"
-                  onClick={() => setError(null)}
-                >
-                  Dismiss
-                </button>
-              </div>
-            ) : branches.length === 0 ? (
-              <div className="branch-empty">
-                <span>No branches found</span>
-              </div>
-            ) : (
-              branches.map((branch) => {
-                const isCurrent = branch.name === currentBranch.name || (branch as any).isCurrent
-                return (
-                  <button
-                    key={branch.name}
-                    className={`branch-item ${isCurrent ? 'current' : ''}`}
-                    onClick={() => handleBranchSelect(branch)}
-                    disabled={isCurrent || loading}
-                  >
-                    <GitBranch size={14} />
-                    <span className="branch-item-name">{branch.name}</span>
-                    {isCurrent && <span className="branch-item-badge">Current</span>}
-                  </button>
-                )
-              })
-            )}
-          </div>
-        </div>
-      )}
+  return (
+    <div ref={dropdownRef}>
+      <UiBranchSelector
+        triggerLabel={currentBranch.name}
+        triggerDisabled={loading}
+        isOpen={isOpen}
+        loading={loading}
+        branches={branchItems}
+        error={error}
+        onToggleOpen={() => setIsOpen(!isOpen)}
+        onClose={() => setIsOpen(false)}
+        onSelectBranch={(branch) =>
+          handleBranchSelect(branches.find((b) => b.name === branch.name))
+        }
+        onDismissError={() => setError(null)}
+        conflict={
+          hasLocalChanges && pendingBranch
+            ? {
+              branchName: pendingBranch.name,
+              onStash: handleStashAndCheckout,
+              onDiscard: handleDiscardAndCheckout,
+              onCancel: () => {
+                setPendingBranch(null)
+                setHasLocalChanges(false)
+                setError(null)
+              },
+              loading,
+              warningIcon: <AlertCircle size={16} />,
+              stashIcon: <Save size={14} />,
+              discardIcon: <Trash2 size={14} />,
+            }
+            : undefined
+        }
+        triggerIcon={<GitBranch size={16} />}
+        chevronIcon={<ChevronDown size={14} className={`chevron ${isOpen ? 'open' : ''}`} />}
+        closeIcon={<X size={14} />}
+        branchIcon={<GitBranch size={14} />}
+      />
     </div>
   )
 }

@@ -6,7 +6,7 @@ import { ConvexReactClient } from 'convex/react'
 import { PostHogProvider } from 'posthog-js/react'
 
 import { router } from './router'
-import './index.css'
+// Theme is now imported from @whodidit/ui via component imports
 
 const convexUrl = import.meta.env.VITE_CONVEX_URL || ''
 const posthogAPIKey = import.meta.env.VITE_POSTHOG_KEY

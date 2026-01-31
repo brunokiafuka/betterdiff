@@ -1,0 +1,86 @@
+.commit-card {
+  background: var(--bg-elevated);
+  border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.commit-card-base {
+  border-left: 3px solid rgba(245, 158, 11, 0.7);
+}
+
+.commit-card-head {
+  border-left: 3px solid rgba(16, 185, 129, 0.7);
+}
+
+.commit-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.commit-card-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-tertiary);
+}
+
+.commit-card-external-link {
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+}
+
+.commit-card-external-link:hover {
+  color: var(--text-primary);
+}
+
+.commit-card-sha {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.commit-card-message {
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.commit-card-meta {
+  display: flex;
+  gap: var(--space-lg);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.commit-card .commit-meta-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.commit-card-pr-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  background: rgba(168, 85, 247, 0.12);
+  color: rgb(168, 85, 247);
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.commit-card .commit-message-full {
+  margin: 0;
+}

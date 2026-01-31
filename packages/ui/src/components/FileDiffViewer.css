@@ -46,7 +46,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-sm);
   background: var(--bg-elevated);
   border: var(--border-width) solid var(--border-default);
   border-radius: var(--radius-sm);
@@ -54,6 +53,18 @@
   cursor: pointer;
   transition: all var(--transition-base);
   flex-shrink: 0;
+}
+
+.diff-details-btn.with-label {
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-sans);
+}
+
+.diff-details-btn.icon-only {
+  padding: var(--space-sm);
   width: 32px;
   height: 32px;
 }
@@ -133,5 +144,7 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }

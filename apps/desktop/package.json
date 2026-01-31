@@ -12,9 +12,9 @@
     "electron:build": "electron-builder"
   },
   "dependencies": {
-    "@monaco-editor/react": "^4.6.0",
     "@octokit/graphql": "^7.0.2",
     "@octokit/rest": "^20.0.2",
+    "@whodidit/ui": "workspace:*",
     "better-sqlite3": "^9.3.0",
     "diff": "^5.2.0",
     "lucide-react": "^0.344.0",

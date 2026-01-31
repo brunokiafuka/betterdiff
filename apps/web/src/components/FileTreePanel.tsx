@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useSignals } from '@preact/signals-react/runtime'
 import { Folder, FolderOpen, File } from 'lucide-react'
+import { FileTreePanel as UiFileTreePanel } from '@whodidit/ui'
 import { currentRepo, baseRef } from '../stores/appStore'
 import { useGetRepoTree } from '../services/github'
-import './FileTreePanel.css'
 
 interface FileNode {
   path: string
@@ -139,94 +139,36 @@ export const FileTreePanel: React.FC<FileTreePanelProps> = ({ initialSelectedFil
     window.dispatchEvent(new CustomEvent('file-selected', { detail: { path } }))
   }
 
-  const renderTree = (nodes: FileNode[], level: number = 0) => {
-    return nodes.map((node) => {
-      const fileName = node.path.split('/').pop() || node.path
-      const isExpanded = expandedDirs.has(node.path)
-      const isSelected = selectedFile === node.path
-
-      return (
-        <div key={node.path}>
-          <div
-            role="button"
-            tabIndex={0}
-            className={`tree-node ${isSelected ? 'selected' : ''}`}
-            style={{ paddingLeft: `${level * 16 + 8}px` }}
-            onClick={() => {
-              if (node.type === 'directory') {
-                toggleDirectory(node.path)
-              } else {
-                handleFileClick(node.path)
-              }
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                if (node.type === 'directory') {
-                  toggleDirectory(node.path)
-                } else {
-                  handleFileClick(node.path)
-                }
-              }
-            }}
-            aria-label={`${node.type === 'directory' ? 'Folder' : 'File'}: ${fileName}`}
-          >
-            {node.type === 'directory' ? (
-              <>
-                {isExpanded ? (
-                  <FolderOpen size={16} className="tree-icon" />
-                ) : (
-                  <Folder size={16} className="tree-icon" />
-                )}
-                <span className="tree-name">{fileName}</span>
-              </>
-            ) : (
-              <>
-                <File size={16} className="tree-icon" />
-                <span className="tree-name">{fileName}</span>
-              </>
-            )}
-          </div>
-          {node.type === 'directory' && isExpanded && node.children && (
-            <div className="tree-children">
-              {renderTree(node.children, level + 1)}
-            </div>
-          )}
-        </div>
-      )
-    })
-  }
-
   if (!repo || !ref) {
     return (
-      <div className="file-tree-panel">
-        <div className="file-tree-empty">
-          Select a repository and branch to browse files
-        </div>
-      </div>
+      <UiFileTreePanel
+        tree={[]}
+        expandedDirs={expandedDirs}
+        selectedFile={selectedFile}
+        loading={false}
+        emptyMessage="Select a repository and branch to browse files"
+        onToggleDirectory={toggleDirectory}
+        onSelectFile={handleFileClick}
+        renderDirectoryIcon={(isExpanded) =>
+          isExpanded ? <FolderOpen size={16} /> : <Folder size={16} />
+        }
+        fileIcon={<File size={16} />}
+      />
     )
   }
 
   return (
-    <div className="file-tree-panel">
-      <div className="file-tree-header">
-        <h3>Files</h3>
-      </div>
-
-      <div className="file-tree-content">
-        {loading ? (
-          <div className="file-tree-loading">
-            <div className="spinner"></div>
-            <span>Loading files...</span>
-          </div>
-        ) : fileTree.length === 0 ? (
-          <div className="file-tree-empty">
-            <span>No files found</span>
-          </div>
-        ) : (
-          renderTree(fileTree)
-        )}
-      </div>
-    </div>
+    <UiFileTreePanel
+      tree={fileTree}
+      expandedDirs={expandedDirs}
+      selectedFile={selectedFile}
+      loading={loading}
+      onToggleDirectory={toggleDirectory}
+      onSelectFile={handleFileClick}
+      renderDirectoryIcon={(isExpanded) =>
+        isExpanded ? <FolderOpen size={16} /> : <Folder size={16} />
+      }
+      fileIcon={<File size={16} />}
+    />
   )
 }

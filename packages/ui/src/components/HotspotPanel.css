@@ -59,10 +59,12 @@
   text-align: center;
 }
 
-.placeholder-text {
+.hotspot-panel .placeholder-text {
   color: var(--text-tertiary);
   font-size: 14px;
   margin: 0;
+  padding: var(--space-xl);
+  text-align: center;
 }
 
 .error-text {

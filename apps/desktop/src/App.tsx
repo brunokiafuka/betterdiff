@@ -4,7 +4,6 @@ import { Welcome } from './components/Welcome'
 import { Settings } from './components/Settings'
 import { FileExplorerView } from './components/FileExplorerView'
 import { useAppStore } from './stores/appStore'
-import './App.css'
 
 function App() {
   const { currentRepo } = useAppStore()
@@ -26,7 +25,7 @@ function App() {
     }
 
     window.addEventListener('open-settings', handleOpenSettings)
-    
+
     // Listen for menu events from main process
     // @ts-ignore - onMenuAction is defined in preload
     const cleanupSettings = window.electronAPI.onMenuAction('open-settings', () => {
@@ -40,7 +39,7 @@ function App() {
     const cleanupLocal = window.electronAPI.onMenuAction('open-local-repo', () => {
       window.dispatchEvent(new CustomEvent('menu:open-local-repo'))
     })
-    
+
     return () => {
       window.removeEventListener('open-settings', handleOpenSettings)
       cleanupSettings()

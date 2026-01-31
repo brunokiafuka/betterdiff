@@ -12,11 +12,10 @@
   "dependencies": {
     "@auth/core": "0.37.0",
     "@convex-dev/auth": "^0.0.90",
-    "@monaco-editor/react": "^4.6.0",
     "@octokit/rest": "^20.0.2",
-    "@pierre/diffs": "^1.0.9",
     "@preact/signals-react": "^2.0.0",
     "@tanstack/react-router": "^1.157.14",
+    "@whodidit/ui": "workspace:*",
     "convex": "^1.31.6",
     "diff": "^5.2.0",
     "lucide-react": "^0.344.0",

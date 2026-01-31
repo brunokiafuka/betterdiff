@@ -1,9 +1,6 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useSignals } from '@preact/signals-react/runtime'
-import { MultiFileDiff, File } from '@pierre/diffs/react'
-import type { FileContents } from '@pierre/diffs'
+import { useState, useEffect } from 'react'
+import { FileDiffViewer as UiFileDiffViewer } from '@whodidit/ui'
 import { useGetFileContent } from '../services/github'
-import './FileDiffViewer.css'
 
 interface FileDiffViewerProps {
   filePath: string
@@ -20,7 +17,6 @@ export const FileDiffViewer: React.FC<FileDiffViewerProps> = ({
   headSha,
   repoFullName,
 }) => {
-  useSignals()
   const getFileContent = useGetFileContent()
   const [oldContent, setOldContent] = useState('')
   const [newContent, setNewContent] = useState('')
@@ -72,73 +68,14 @@ export const FileDiffViewer: React.FC<FileDiffViewerProps> = ({
     loadFileContents()
   }, [baseSha, headSha, repoFullName, filePath, getFileContent])
 
-  // Create stable file objects for @pierre/diffs
-  // The library uses reference equality to detect changes
-  const oldFile: FileContents = useMemo(() => ({
-    name: filePath,
-    contents: oldContent,
-  }), [filePath, oldContent])
-
-  const newFile: FileContents = useMemo(() => ({
-    name: filePath,
-    contents: newContent,
-  }), [filePath, newContent])
-
-  if (!baseSha || !headSha) {
-    return (
-      <div className="file-diff-viewer">
-        <div className="diff-empty">
-          Select commits from the history below to view the file
-        </div>
-      </div>
-    )
-  }
-
-  const isSameCommit = baseSha === headSha
-
   return (
-    <div className="file-diff-viewer">
-      <div className="diff-header">
-        <div className="diff-file-path">
-          {filePath}
-        </div>
-      </div>
-
-      <div className="diff-editor-container">
-        {loading ? (
-          <div className="diff-loading">
-            <div className="spinner"></div>
-            <span>Loading file contents...</span>
-          </div>
-        ) : isSameCommit ? (
-          // Show single file viewer for viewing file at one commit
-          <File
-            file={newFile}
-            options={{
-              theme: 'pierre-dark',
-              disableFileHeader: true,
-              overflow: 'scroll',
-            }}
-            className="pierre-diff-file"
-          />
-        ) : (
-          // Show diff viewer for comparing two commits
-          <MultiFileDiff
-            oldFile={oldFile}
-            newFile={newFile}
-            options={{
-              theme: 'pierre-dark',
-              diffStyle: 'split',
-              diffIndicators: 'bars',
-              hunkSeparators: 'line-info',
-              lineDiffType: 'word-alt',
-              disableFileHeader: true,
-              overflow: 'scroll',
-            }}
-            className="pierre-diff-viewer"
-          />
-        )}
-      </div>
-    </div>
+    <UiFileDiffViewer
+      filePath={filePath}
+      baseSha={baseSha}
+      headSha={headSha}
+      oldContent={oldContent}
+      newContent={newContent}
+      loading={loading}
+    />
   )
 }

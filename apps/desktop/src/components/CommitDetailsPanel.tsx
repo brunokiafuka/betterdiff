@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { X, ExternalLink, User, Calendar, GitBranch, GitPullRequest } from 'lucide-react'
-import './CommitDetailsPanel.css'
+import { CommitDetailsPanel as UiCommitDetailsPanel } from '@whodidit/ui'
 
 interface CommitDetailsPanelProps {
   repoFullName: string
@@ -125,151 +125,24 @@ export const CommitDetailsPanel: React.FC<CommitDetailsPanelProps> = ({
     loadCommits()
   }, [repoFullName, baseSha, headSha])
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'Unknown'
-    const date = new Date(dateString)
-    return date.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
-  const formatMessage = (message: string) => {
-    if (!message) return ''
-    // Truncate to first line (usually the PR title/subject)
-    const firstLine = message.split('\n')[0]
-    // Limit to 80 characters
-    return firstLine.length > 80 ? firstLine.substring(0, 80) + '...' : firstLine
-  }
-
-  const renderCommit = (commit: any, label: string, isBase: boolean = false) => {
-    if (!commit) return null
-
-    return (
-      <div className={`commit-detail-card ${isBase ? 'base' : 'head'}`}>
-        <div className="commit-detail-header">
-          <div className="commit-detail-label">{label}</div>
-          {commit.url && (
-            <a
-              href={commit.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="commit-external-link"
-              title="View on GitHub"
-            >
-              <ExternalLink size={14} />
-            </a>
-          )}
-        </div>
-
-        <div className="commit-detail-sha">
-          <GitBranch size={14} />
-          <code>{commit.shortSha}</code>
-          {commit.prNumber && (
-            <a
-              href={`https://github.com/${repoFullName}/pull/${commit.prNumber}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="commit-pr-link"
-              title={`View PR #${commit.prNumber}`}
-            >
-              <GitPullRequest size={14} />
-              <span>PR #{commit.prNumber}</span>
-            </a>
-          )}
-        </div>
-
-        <div className="commit-detail-message">
-          <div className="commit-message-full">
-            {formatMessage(commit.message)}
-          </div>
-        </div>
-
-        <div className="commit-detail-meta">
-          <div className="commit-meta-item">
-            <User size={14} />
-            <span>{commit.author.name}</span>
-          </div>
-          <div className="commit-meta-item">
-            <Calendar size={14} />
-            <span>{formatDate(commit.author.date)}</span>
-          </div>
-        </div>
-
-      </div>
-    )
-  }
-
   return (
-    <div className="commit-details-panel">
-      <div className="commit-details-header">
-        <h3>Commit Details</h3>
-        <button className="commit-details-close" onClick={onClose} title="Close">
-          <X size={18} />
-        </button>
-      </div>
-
-      <div className="commit-details-content">
-        {loading ? (
-          <div className="commit-details-loading">
-            <div className="spinner"></div>
-            <span>Loading commit details...</span>
-          </div>
-        ) : (
-          <>
-            {error && (
-              <div className="commit-details-error">
-                <p><strong>Error:</strong> {error}</p>
-              </div>
-            )}
-
-            {(() => {
-              const isSameCommit = baseSha && headSha && baseSha === headSha
-
-              if (isSameCommit) {
-                // Same commit - show single commit
-                return headCommit || baseCommit ? (
-                  renderCommit(headCommit || baseCommit, 'Commit', false)
-                ) : !error ? (
-                  <div className="commit-details-empty">
-                    <p>Failed to load commit</p>
-                  </div>
-                ) : null
-              } else {
-                // Different commits - show both
-                return (
-                  <>
-                    {baseSha && baseCommit ? (
-                      renderCommit(baseCommit, 'Base Commit', true)
-                    ) : baseSha && !loading && !error ? (
-                      <div className="commit-details-empty">
-                        <p>Failed to load base commit</p>
-                      </div>
-                    ) : null}
-
-                    {headSha && headCommit ? (
-                      renderCommit(headCommit, 'Head Commit', false)
-                    ) : headSha && !loading && !error ? (
-                      <div className="commit-details-empty">
-                        <p>Failed to load head commit</p>
-                      </div>
-                    ) : null}
-                  </>
-                )
-              }
-            })()}
-
-            {!baseSha && !headSha && (
-              <div className="commit-details-empty">
-                <p>No commits selected</p>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
+    <UiCommitDetailsPanel
+      repoFullName={repoFullName}
+      baseSha={baseSha}
+      headSha={headSha}
+      baseCommit={baseCommit}
+      headCommit={headCommit}
+      loading={loading}
+      error={error}
+      showHeader
+      title="Commit Details"
+      onClose={onClose}
+      closeIcon={<X size={18} />}
+      linkIcon={<ExternalLink size={14} />}
+      branchIcon={<GitBranch size={14} />}
+      prIcon={<GitPullRequest size={14} />}
+      userIcon={<User size={14} />}
+      calendarIcon={<Calendar size={14} />}
+    />
   )
 }
