@@ -6,7 +6,9 @@
   "scripts": {
     "dev:desktop": "pnpm --filter desktop dev",
     "build:desktop": "pnpm --filter desktop build",
-    "preview:desktop": "pnpm --filter desktop preview"
+    "preview:desktop": "pnpm --filter desktop preview",
+    "build:extension": "pnpm --filter betterdiff-extension build",
+    "dev:extension": "pnpm --filter betterdiff-extension build:watch"
   },
   "engines": {
     "node": ">=18.0.0",
