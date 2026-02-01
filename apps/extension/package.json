@@ -1,0 +1,16 @@
+{
+  "name": "betterdiff-extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Chrome MV3 extension for BetterDiff on GitHub",
+  "scripts": {
+    "build": "node build.mjs",
+    "build:watch": "node build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo \"No lint configured\""
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.4",
+    "typescript": "^5.7.3"
+  }
+}
